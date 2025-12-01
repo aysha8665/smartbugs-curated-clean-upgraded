@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.15;
+pragma solidity ^0.8.0;
 
 //=======================
 contract DosAuction {
@@ -12,15 +12,15 @@ contract DosAuction {
   uint currentBid;
 
   //=======================
-  function bid() payable {
+  function bid() payable public {
     require(msg.value > currentBid);
 
     //=======================
     
-    if (currentFrontrunner != 0) {
+    if (currentFrontrunner != address(0)) {
       
       
-      require(currentFrontrunner.send(currentBid));
+      require(payable(currentFrontrunner).send(currentBid));
     }
 
     currentFrontrunner = msg.sender;

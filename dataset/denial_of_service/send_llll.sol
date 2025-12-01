@@ -5,7 +5,7 @@
  * =======================
  */
 
-pragma solidity 0.4.24;
+pragma solidity ^0.8.0;
 
 contract Refunder {
     
@@ -21,7 +21,7 @@ mapping (address => uint) public refunds;
     function refundAll() public {
         for(uint x; x < refundAddresses.length; x++) { 
         
-            require(refundAddresses[x].send(refunds[refundAddresses[x]])); 
+            require(payable(refundAddresses[x]).send(refunds[refundAddresses[x]])); 
         }
     }
 
