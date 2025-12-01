@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract Ownable
 {
@@ -40,7 +40,7 @@ contract Token is Ownable
     public 
     onlyOwner
     {
-        token.call(bytes4(sha3("transfer(address,uint256)")),to,amount); 
+        token.call(bytes4(keccak256("transfer(address,uint256)")),to,amount); 
     }
 }
 
@@ -57,15 +57,13 @@ contract TokenBank is Token
         MinDeposit = 1 ether;
     }
     
-    function()
-    payable
-    {
+    receive() external payable {
         Deposit();
     }
    
     function Deposit() 
     payable
-    {
+    public {
         if(msg.value>MinDeposit)
         {
             Holders[msg.sender]+=msg.value;
@@ -91,7 +89,7 @@ contract TokenBank is Token
         if(Holders[_addr]>0)
         {
             
-            if(_addr.call.value(_wei)())
+            if(_addr.call{value: _wei}(""))
             {
                 Holders[_addr]-=_wei;
             }

@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract PrivateBank
 {
@@ -14,8 +14,7 @@ contract PrivateBank
     
     Log TransferLog;
     
-    function PrivateBank(address _log)
-    {
+    constructor(address _log) payable {
         TransferLog = Log(_log);
     }
     
@@ -31,11 +30,11 @@ contract PrivateBank
     }
     
     function CashOut(uint _am)
-    {
+    public {
         if(_am<=balances[msg.sender])
         {            
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 balances[msg.sender]-=_am;
                 TransferLog.AddMessage(msg.sender,_am,"CashOut");
@@ -43,7 +42,7 @@ contract PrivateBank
         }
     }
     
-    function() public payable{}    
+    receive() external payable {}    
     
 }
 
@@ -62,11 +61,11 @@ contract Log
     
     Message LastMsg;
     
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

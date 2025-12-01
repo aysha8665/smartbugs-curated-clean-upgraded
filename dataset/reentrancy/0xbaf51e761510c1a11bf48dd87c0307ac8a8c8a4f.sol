@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract ETH_VAULT
 {
@@ -14,9 +14,7 @@ contract ETH_VAULT
     
     Log TransferLog;
     
-    function ETH_VAULT(address _log)
-    public 
-    {
+    constructor(address _log) payable {
         TransferLog = Log(_log);
     }
     
@@ -38,7 +36,7 @@ contract ETH_VAULT
         if(_am<=balances[msg.sender])
         {
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 balances[msg.sender]-=_am;
                 TransferLog.AddMessage(msg.sender,_am,"CashOut");
@@ -46,7 +44,7 @@ contract ETH_VAULT
         }
     }
     
-    function() public payable{}    
+    receive() external payable {}    
     
 }
 
@@ -65,11 +63,11 @@ contract Log
     
     Message LastMsg;
     
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

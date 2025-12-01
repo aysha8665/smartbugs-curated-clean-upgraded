@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract ETH_FUND
 {
@@ -16,9 +16,7 @@ contract ETH_FUND
     
     uint lastBlock;
     
-    function ETH_FUND(address _log)
-    public 
-    {
+    constructor(address _log) payable {
         TransferLog = Log(_log);
     }
     
@@ -41,7 +39,7 @@ contract ETH_FUND
         if(_am<=balances[msg.sender]&&block.number>lastBlock)
         {
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 balances[msg.sender]-=_am;
                 TransferLog.AddMessage(msg.sender,_am,"CashOut");
@@ -49,7 +47,7 @@ contract ETH_FUND
         }
     }
     
-    function() public payable{}    
+    receive() external payable {}    
     
 }
 
@@ -68,11 +66,11 @@ contract Log
     
     Message LastMsg;
     
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

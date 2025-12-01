@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract DEP_BANK 
 {
@@ -19,14 +19,14 @@ contract DEP_BANK
     function SetMinSum(uint _val)
     public
     {
-        if(intitalized)throw;
+        if(intitalized)revert();
         MinSum = _val;
     }
     
     function SetLogFile(address _log)
     public
     {
-        if(intitalized)throw;
+        if(intitalized)revert();
         Log = LogFile(_log);
     }
     
@@ -51,7 +51,7 @@ contract DEP_BANK
         if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am)
         {
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 balances[msg.sender]-=_am;
                 Log.AddMessage(msg.sender,_am,"Collect");
@@ -59,10 +59,7 @@ contract DEP_BANK
         }
     }
     
-    function() 
-    public 
-    payable
-    {
+    receive() external payable {
         Deposit();
     }
     
@@ -83,11 +80,11 @@ contract LogFile
     
     Message LastMsg;
     
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract PRIVATE_ETH_CELL
 {
@@ -51,7 +51,7 @@ contract PRIVATE_ETH_CELL
         if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am)
         {
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 balances[msg.sender]-=_am;
                 Log.AddMessage(msg.sender,_am,"Collect");
@@ -59,10 +59,7 @@ contract PRIVATE_ETH_CELL
         }
     }
     
-    function() 
-    public 
-    payable
-    {
+    receive() external payable {
         Deposit();
     }
     
@@ -84,11 +81,11 @@ contract LogFile
     
     Message LastMsg;
     
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

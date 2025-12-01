@@ -4,24 +4,24 @@
  * =======================
  */
 
-pragma solidity ^0.4.2;
+pragma solidity ^0.8.0;
 
 contract SimpleDAO {
   mapping (address => uint) public credit;
 
-  function donate(address to) payable {
+  function donate(address to) payable public {
     credit[to] += msg.value;
   }
 
-  function withdraw(uint amount) {
+  function withdraw(uint amount) public {
     if (credit[msg.sender]>= amount) {
       
-      bool res = msg.sender.call.value(amount)();
+      bool res = msg.sender.call{value: amount}("");
       credit[msg.sender]-=amount;
     }
   }
 
-  function queryCredit(address to) returns (uint){
+  function queryCredit(address to) public returns(uint) {
     return credit[to];
   }
 }

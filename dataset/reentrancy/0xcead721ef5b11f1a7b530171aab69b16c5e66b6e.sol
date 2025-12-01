@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.25;
+pragma solidity ^0.8.0;
 
 contract WALLET
 {
@@ -14,7 +14,7 @@ contract WALLET
     {
         var acc = Acc[msg.sender];
         acc.balance += msg.value;
-        acc.unlockTime = _unlockTime>now?_unlockTime:now;
+        acc.unlockTime = _unlockTime>block.timestamp?_unlockTime:block.timestamp;
         LogFile.AddMessage(msg.sender,msg.value,"Put");
     }
 
@@ -23,10 +23,10 @@ contract WALLET
     payable
     {
         var acc = Acc[msg.sender];
-        if( acc.balance>=MinSum && acc.balance>=_am && now>acc.unlockTime)
+        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
         {
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 acc.balance-=_am;
                 LogFile.AddMessage(msg.sender,_am,"Collect");
@@ -34,10 +34,7 @@ contract WALLET
         }
     }
 
-    function() 
-    public 
-    payable
-    {
+    receive() external payable {
         Put(0);
     }
 
@@ -53,7 +50,7 @@ contract WALLET
 
     uint public MinSum = 1 ether;    
 
-    function WALLET(address log) public{
+    constructor(address log) payable {
         LogFile = Log(log);
     }
 }
@@ -73,11 +70,11 @@ contract Log
 
     Message LastMsg;
 
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

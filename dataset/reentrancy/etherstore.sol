@@ -5,7 +5,7 @@
  */
 
 //added pragma version
-pragma solidity ^0.4.10;
+pragma solidity ^0.8.0;
 
 contract EtherStore {
 
@@ -22,10 +22,10 @@ contract EtherStore {
         
         require(_weiToWithdraw <= withdrawalLimit);
         
-        require(now >= lastWithdrawTime[msg.sender] + 1 weeks);
+        require(block.timestamp >= lastWithdrawTime[msg.sender] + 1 weeks);
         
-        require(msg.sender.call.value(_weiToWithdraw)());
+        require(msg.sender.call{value: _weiToWithdraw}(""));
         balances[msg.sender] -= _weiToWithdraw;
-        lastWithdrawTime[msg.sender] = now;
+        lastWithdrawTime[msg.sender] = block.timestamp;
     }
  }

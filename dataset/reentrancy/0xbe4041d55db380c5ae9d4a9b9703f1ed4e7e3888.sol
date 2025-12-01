@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract MONEY_BOX   
 {
@@ -25,14 +25,14 @@ contract MONEY_BOX
     function SetMinSum(uint _val)
     public
     {
-        if(intitalized)throw;
+        if(intitalized)revert();
         MinSum = _val;
     }
     
     function SetLogFile(address _log)
     public
     {
-        if(intitalized)throw;
+        if(intitalized)revert();
         LogFile = Log(_log);
     }
     
@@ -48,7 +48,7 @@ contract MONEY_BOX
     {
         var acc = Acc[msg.sender];
         acc.balance += msg.value;
-        if(now+_lockTime>acc.unlockTime)acc.unlockTime=now+_lockTime;
+        if(block.timestamp+_lockTime>acc.unlockTime)acc.unlockTime=block.timestamp+_lockTime;
         LogFile.AddMessage(msg.sender,msg.value,"Put");
     }
     
@@ -57,10 +57,10 @@ contract MONEY_BOX
     payable
     {
         var acc = Acc[msg.sender];
-        if( acc.balance>=MinSum && acc.balance>=_am && now>acc.unlockTime)
+        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
         {
             
-            if(msg.sender.call.value(_am)())
+            if(msg.sender.call{value: _am}(""))
             {
                 acc.balance-=_am;
                 LogFile.AddMessage(msg.sender,_am,"Collect");
@@ -68,10 +68,7 @@ contract MONEY_BOX
         }
     }
     
-    function() 
-    public 
-    payable
-    {
+    receive() external payable {
         Put(0);
     }
     
@@ -92,11 +89,11 @@ contract Log
     
     Message LastMsg;
     
-    function AddMessage(address _adr,uint _val,string _data)
+    function AddMessage(address _adr,uint _val, string memory _data)
     public
     {
         LastMsg.Sender = _adr;
-        LastMsg.Time = now;
+        LastMsg.Time = block.timestamp;
         LastMsg.Val = _val;
         LastMsg.Data = _data;
         History.push(LastMsg);

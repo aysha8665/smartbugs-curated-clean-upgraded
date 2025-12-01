@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract ReentrancyDAO {
     mapping (address => uint) credit;
@@ -15,7 +15,7 @@ contract ReentrancyDAO {
         if (oCredit > 0) {
             balance -= oCredit;
             
-            bool callResult = msg.sender.call.value(oCredit)();
+            bool callResult = msg.sender.call{value: oCredit}("");
             require (callResult);
             credit[msg.sender] = 0;
         }
