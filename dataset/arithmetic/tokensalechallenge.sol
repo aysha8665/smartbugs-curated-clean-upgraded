@@ -4,13 +4,13 @@
  * =======================
  */
 
-pragma solidity ^0.4.21;
+pragma solidity ^0.8.0;
 
 contract TokenSaleChallenge {
     mapping(address => uint256) public balanceOf;
     uint256 constant PRICE_PER_TOKEN = 1 ether;
 
-    function TokenSaleChallenge(address _player) public payable {
+    constructor(address _player)  payable  {
         require(msg.value == 1 ether);
     }
 
@@ -22,14 +22,14 @@ contract TokenSaleChallenge {
         
         require(msg.value == numTokens * PRICE_PER_TOKEN);
        
-        balanceOf[msg.sender] += numTokens;
+        unchecked { balanceOf[msg.sender] += numTokens; }
     }
 
     function sell(uint256 numTokens) public {
         require(balanceOf[msg.sender] >= numTokens);
 
-        balanceOf[msg.sender] -= numTokens;
+        unchecked { balanceOf[msg.sender] -= numTokens; }
         
-        msg.sender.transfer(numTokens * PRICE_PER_TOKEN);
+        payable(msg.sender).transfer(numTokens * PRICE_PER_TOKEN);
     }
 }

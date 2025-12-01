@@ -7,7 +7,7 @@
 //=======================
 //=======================
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 contract jjjMultiTxOneFuncFeasible {
     uint256 private initialized = 0;
@@ -19,6 +19,6 @@ contract jjjMultiTxOneFuncFeasible {
             return;
         }
         
-        count -= input;
+        unchecked { count -= input; }
     }
 }

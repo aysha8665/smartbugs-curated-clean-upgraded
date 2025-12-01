@@ -7,7 +7,7 @@
 //=======================
 //=======================
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 contract qqqMultiTxMultiFuncFeasible {
     uint256 private initialized = 0;
@@ -17,11 +17,11 @@ contract qqqMultiTxMultiFuncFeasible {
         initialized = 1;
     }
 
-    function run(uint256 input) {
+    function run(uint256 input) public {
         if (initialized == 0) {
             return;
         }
         
-        count -= input;
+        unchecked { count -= input; }
     }
 }

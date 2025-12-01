@@ -7,7 +7,7 @@
 //=======================
 //=======================
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 contract pppSingleTransaction {
     uint public count = 1;
@@ -15,37 +15,37 @@ contract pppSingleTransaction {
     
     function waddtostate(uint256 input) public {
         
-        count += input;
+        unchecked { count += input; }
     }
 
     
     function wmultostate(uint256 input) public {
         
-        count *= input;
+        unchecked { count *= input; }
     }
 
     
     function wtostate(uint256 input) public {
         
-        count -= input;
+        unchecked { count -= input; }
     }
 
     
     function wlocalonly(uint256 input) public {
        
-        uint res = count + input;
+        uint unchecked { res = count + input; }
     }
 
     
     function wmulocalonly(uint256 input) public {
         
-        uint res = count * input;
+        uint unchecked { res = count * input; }
     }
 
     
     function wlocalonly(uint256 input) public {
         
-       	uint res = count - input;
+       	uint unchecked { res = count - input; }
     }
 
 }
