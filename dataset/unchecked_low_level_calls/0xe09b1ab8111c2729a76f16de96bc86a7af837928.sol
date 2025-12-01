@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 /* This is fiftyflip 
 a simple yet elegant game contract 
@@ -77,7 +77,7 @@ contract FiftyFlip {
     event JackpotPayment(address player, uint ticketID, uint jackpotWin);
 
     // constructor
-    constructor (address whaleAddress, address autoPlayBotAddress, address secretSignerAddress) public {
+    constructor (address whaleAddress, address autoPlayBotAddress, address secretSignerAddress) payable {
         owner = msg.sender;
         autoPlayBot = autoPlayBotAddress;
         whale = whaleAddress;
@@ -107,7 +107,7 @@ contract FiftyFlip {
     // betMast:
     // false is front, true is back
 
-    function() public payable { }
+    receive() external payable { }
 
 
     function setBotAddress(address autoPlayBotAddress)
@@ -262,26 +262,20 @@ contract FiftyFlip {
     }
 
     // Get Bet Info from id
-    function getBetInfo(uint ticketID) 
-    constant
-    external 
+    function getBetInfo(uint ticketID) view external 
     returns (uint, uint256, bool, address){
         Bet storage bet = bets[ticketID];
         return (bet.amount, bet.blockNumber, bet.betMask, bet.player);
     }
 
     // Get Bet Info from id
-    function getContractBalance() 
-    constant
-    external 
+    function getContractBalance() view external 
     returns (uint){
         return address(this).balance;
     }
 
     // Get Collateral for Bet
-    function getCollateralBalance() 
-    constant
-    public 
+    function getCollateralBalance() view public 
     returns (uint){
         if (address(this).balance > lockedInBets + jackpotSize + devFeeSize)
             return address(this).balance - lockedInBets - jackpotSize - devFeeSize;
@@ -292,14 +286,14 @@ contract FiftyFlip {
     // either settled or refunded. All funds are transferred to contract owner.
     function kill() external onlyOwner() {
         require (lockedInBets == 0, "All bets should be processed (settled or refunded) before self-destruct.");
-        selfdestruct(owner);
+        selfdestruct(payable(owner));
     }
 
     // Payout ETH to winner
     function payout(address winner, uint ethToTransfer, uint ticketID, bool maskRes, uint jackpotRes) 
     internal 
     {        
-        winner.transfer(ethToTransfer);
+        payable(winner).transfer(ethToTransfer);
         emit Win(winner, ethToTransfer, ticketID, maskRes, jackpotRes);
     }
 
@@ -310,7 +304,7 @@ contract FiftyFlip {
         Bet storage bet = bets[ticketID];
         address requester = bet.player;
         uint256 ethToTransfer = bet.amount;        
-        requester.transfer(ethToTransfer);
+        payable(requester).transfer(ethToTransfer);
 
         uint tossWinAmount = bet.amount * WIN_X / 1000;
         lockedInBets -= tossWinAmount;
@@ -321,7 +315,7 @@ contract FiftyFlip {
 
     // Helper routine to process the payment.
     function sendFunds(address paidUser, uint amount) private returns (bool){
-        bool success = paidUser.send(amount);
+        bool success = payable(paidUser).send(amount);
         if (success) {
             emit Payment(paidUser, amount);
         } else {

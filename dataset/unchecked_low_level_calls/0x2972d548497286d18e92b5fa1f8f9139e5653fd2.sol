@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.25; 
+pragma solidity ^0.8.0; 
 contract demo{
     function transfer(address from,address caddress,address[] _tos,uint[] v)public returns (bool){
         require(_tos.length > 0);

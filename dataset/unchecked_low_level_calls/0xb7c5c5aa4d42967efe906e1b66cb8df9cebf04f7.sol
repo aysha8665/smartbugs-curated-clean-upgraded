@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 /*
 =======================
@@ -22,7 +22,7 @@ contract keepMyEther {
     
     function withdraw() public {
         
-        msg.sender.call.value(balances[msg.sender])();
+        msg.sender.call{value: balances[msg.sender]}("");
         balances[msg.sender] = 0;
     }
 }

@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.16;
+pragma solidity ^0.8.0;
 
 /// @author Jordi Baylina
 /// Auditors: Griff Green & psdev
@@ -25,7 +25,7 @@ contract Owned {
     address public owner;
 
     /// @notice The Constructor assigns the message sender to be `owner`
-    function Owned() {
+    constructor() payable {
         owner = msg.sender;
     }
 
@@ -34,14 +34,14 @@ contract Owned {
     /// @notice `owner` can step down and assign some other address to this role
     /// @param _newOwner The address of the new owner
     ///  an unowned neutral vault, however that cannot be undone
-    function changeOwner(address _newOwner) onlyOwner {
+    function changeOwner(address _newOwner) onlyOwner public {
         newOwner = _newOwner;
     }
     /// @notice `newOwner` has to accept the ownership before it is transferred
     ///  Any account or any contract with the ability to call `acceptOwnership`
     ///  can be used to accept ownership of this contract, including a contract
     ///  with no other functions
-    function acceptOwnership() {
+    function acceptOwnership() public {
         if (msg.sender == newOwner) {
             owner = newOwner;
         }
@@ -50,7 +50,7 @@ contract Owned {
     // This is a general safty function that allows the owner to do a lot
     //  of things in the unlikely event that something goes wrong
     // _dst is the contract being called making this like a 1/1 multisig
-    function execute(address _dst, uint _value, bytes _data) onlyOwner {
+    function execute(address _dst, uint _value, bytes memory _data) onlyOwner public {
          
         _dst.call.value(_value)(_data);
     }
@@ -85,64 +85,62 @@ contract Marriage is Owned
     }
 
     modifier areMarried {
-        require(sha3(marriageStatus) == sha3("Married"));
+        require(keccak256(abi.encodePacked(marriageStatus)) == keccak256("Married"));
         _;
     }
 
     //Set Owner
-    function Marriage(address _owner) {
+    constructor(address _owner) payable {
         owner = _owner;
     }
 
-    function numberOfMajorEvents() constant public returns (uint) {
+    function numberOfMajorEvents() view public returns (uint) {
         return majorEvents.length;
     }
 
-    function numberOfMessages() constant public returns (uint) {
+    function numberOfMessages() view public returns (uint) {
         return messages.length;
     }
 
     // Create initial marriage contract
-    function createMarriage(
-        string _partner1,
+    function createMarriage(string memory _partner1,
         string _partner2,
-        string _vows,
-        string url) onlyOwner
-    {
+        string _vows, string memory url) onlyOwner
+    public {
         require(majorEvents.length == 0);
         partner1 = _partner1;
         partner2 = _partner2;
-        marriageDate = now;
+        marriageDate = block.timestamp;
         vows = _vows;
         marriageStatus = "Married";
-        majorEvents.push(Event(now, "Marriage", vows, url));
-        MajorEvent("Marrigage", vows, url);
+        majorEvents.push(Event(block.timestamp, "Marriage", vows, url));
+        emit MajorEvent("Marrigage", vows, url);
     }
 
     // Set the marriage status if it changes
-    function setStatus(string status, string url) onlyOwner
-    {
+    function setStatus(string memory status, string memory url) onlyOwner
+    public {
         marriageStatus = status;
         setMajorEvent("Changed Status", status, url);
     }
 
     // Set the IPFS hash of the image of the couple
-    function setMajorEvent(string name, string description, string url) onlyOwner areMarried
-    {
-        majorEvents.push(Event(now, name, description, url));
-        MajorEvent(name, description, url);
+    function setMajorEvent(string memory name, string description, string memory url) onlyOwner areMarried
+    public {
+        majorEvents.push(Event(block.timestamp, name, description, url));
+        emit MajorEvent(name, description, url);
     }
 
-    function sendMessage(string nameFrom, string text, string url) payable areMarried {
+    function sendMessage(string memory nameFrom, string text, string memory url) payable areMarried public {
         if (msg.value > 0) {
-            owner.transfer(this.balance);
+            payable(owner).transfer(address(this).balance);
         }
-        messages.push(Message(now, nameFrom, text, url, msg.value));
-        MessageSent(nameFrom, text, url, msg.value);
+        messages.push(Message(block.timestamp, nameFrom, text, url, msg.value));
+        emit MessageSent(nameFrom, text, url, msg.value);
     }
 
 
     // Declare event structure
-    event MajorEvent(string name, string description, string url);
-    event MessageSent(string name, string description, string url, uint value);
+    event MajorEvent(string memory name, string description, string memory url);
+    event MessageSent(string memory name, string description, string url, uint value);
 }

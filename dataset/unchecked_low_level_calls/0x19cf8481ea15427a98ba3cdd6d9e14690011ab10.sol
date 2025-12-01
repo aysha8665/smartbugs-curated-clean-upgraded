@@ -5,8 +5,8 @@
  */
 
 //DAO Polska Token deployment
-pragma solidity ^0.4.11;
-interface tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) public; }
+pragma solidity ^0.8.0;
+interface tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) public; }
 
 
 // title Migration Agent interface
@@ -16,8 +16,8 @@ contract MigrationAgent {
 
 contract ERC20 {
   uint public totalSupply;
-  function balanceOf(address who) constant returns (uint);
-  function allowance(address owner, address spender) constant returns (uint);
+  function balanceOf(address who) view returns (uint);
+  function allowance(address owner, address spender) view returns (uint);
 
   function transfer(address to, uint value) returns (bool ok);
   function transferFrom(address from, address to, uint value) returns (bool ok);
@@ -74,7 +74,7 @@ contract SafeMath {
 
   function assert(bool assertion) internal {
     if (!assertion) {
-      throw;
+      revert();
     }
   }
 }
@@ -104,41 +104,41 @@ contract StandardToken is ERC20, SafeMath {
     return true;
   }
 
-  function transfer(address _to, uint _value) returns (bool success) {
+  function transfer(address _to, uint _value) public returns(bool success) {
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
-    Transfer(msg.sender, _to, _value);
+    emit Transfer(msg.sender, _to, _value);
     return true;
   }
 
-  function transferFrom(address _from, address _to, uint _value) returns (bool success) {
+  function transferFrom(address _from, address _to, uint _value) public returns(bool success) {
     uint _allowance = allowed[_from][msg.sender];
 
     balances[_to] = safeAdd(balances[_to], _value);
     balances[_from] = safeSub(balances[_from], _value);
     allowed[_from][msg.sender] = safeSub(_allowance, _value);
-    Transfer(_from, _to, _value);
+    emit Transfer(_from, _to, _value);
     return true;
   }
 
-  function balanceOf(address _owner) constant returns (uint balance) {
+  function balanceOf(address _owner) view public returns(uint balance) {
     return balances[_owner];
   }
 
-  function approve(address _spender, uint _value) returns (bool success) {
+  function approve(address _spender, uint _value) public returns(bool success) {
 
     // To change the approve amount you first have to reduce the addresses`
     //  allowance to zero by calling `approve(_spender, 0)` if it is not
     //  already 0 to mitigate the race condition described here:
     //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-    if ((_value != 0) && (allowed[msg.sender][_spender] != 0)) throw;
+    if ((_value != 0) && (allowed[msg.sender][_spender] != 0)) revert();
 
     allowed[msg.sender][_spender] = _value;
-    Approval(msg.sender, _spender, _value);
+    emit Approval(msg.sender, _spender, _value);
     return true;
   }
 
-  function allowance(address _owner, address _spender) constant returns (uint remaining) {
+  function allowance(address _owner, address _spender) view public returns(uint remaining) {
     return allowed[_owner][_spender];
   }
 
@@ -189,7 +189,7 @@ contract daoPOLSKAtokens{
 mapping (address => uint256) balancesRAW;
   mapping (address => mapping (address => uint256)) allowed;
 
-	event UpdatedTokenInformation(string newName, string newSymbol);	
+	event UpdatedTokenInformation(string memory newName, string memory newSymbol);	
  
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 	event receivedEther(address indexed _from,uint256 _value);
@@ -201,17 +201,17 @@ mapping (address => uint256) balancesRAW;
   bool public supplylimitset = false;
   bool public otherchainstotalset = false;
    
-  function daoPOLSKAtokens() {
+  constructor() payable {
 owner=msg.sender;
 migrationMaster=msg.sender;
 }
 
 function  setSupply(uint256 supplyLOCKER) public {
     	   if (msg.sender != owner) {
-      throw;
+      revert();
     }
 		    	   if (supplylimitset != false) {
-      throw;
+      revert();
     }
 	supplylimitset = true;
   
@@ -220,10 +220,10 @@ function  setSupply(uint256 supplyLOCKER) public {
   } 
 function setotherchainstotalsupply(uint256 supplyLOCKER) public {
     	   if (msg.sender != owner) {
-      throw;
+      revert();
     }
 	    	   if (supplylimitset != false) {
-      throw;
+      revert();
     }
 
 	otherchainstotalset = true;
@@ -239,7 +239,7 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
      * @param _value the max amount they can spend
      * @param _extraData some extra information to send to the approved contract
      */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData)
+    function approveAndCall(address _spender, uint256 _value, bytes memory _extraData)
         public
         returns (bool success) {
         tokenRecipient spender = tokenRecipient(_spender);
@@ -260,7 +260,7 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
         require(balances[msg.sender] >= _value);   // Check if the sender has enough
         balances[msg.sender] -= _value;            // Subtract from the sender
         totalSupply -= _value;                      // Updates totalSupply
-        Burn(msg.sender, _value);
+        emit Burn(msg.sender, _value);
         return true;
     }
 
@@ -278,11 +278,11 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
         balances[_from] -= _value;                         // Subtract from the targeted balance
         allowed[_from][msg.sender] -= _value;             // Subtract from the sender's allowance
         totalSupply -= _value;                              // Update totalSupply
-        Burn(_from, _value);
+        emit Burn(_from, _value);
         return true;
     }
   
-  function transfer(address _to, uint256 _value) returns (bool success) {
+  function transfer(address _to, uint256 _value) public returns(bool success) {
     //Default assumes totalSupply can't be over max (2^256 - 1).
     //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
     //Replace the if with this one instead.
@@ -290,34 +290,34 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
     //if (balances[msg.sender] >= _value && _value > 0) {
       balances[msg.sender] -= _value;
       balances[_to] += _value;
-      Transfer(msg.sender, _to, _value);
+      emit Transfer(msg.sender, _to, _value);
       return true;
     } else { return false; }
   }
 
-  function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+  function transferFrom(address _from, address _to, uint256 _value) public returns(bool success) {
     //same as above. Replace this line with the following if you want to protect against wrapping uints.
     if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
     //if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && _value > 0) {
       balances[_to] += _value;
       balances[_from] -= _value;
       allowed[_from][msg.sender] -= _value;
-      Transfer(_from, _to, _value);
+      emit Transfer(_from, _to, _value);
       return true;
     } else { return false; }
   }
 
-  function balanceOf(address _owner) constant returns (uint256 balance) {
+  function balanceOf(address _owner) view public returns(uint256 balance) {
     return balances[_owner];
   }
 
-  function approve(address _spender, uint256 _value) returns (bool success) {
+  function approve(address _spender, uint256 _value) public returns(bool success) {
     allowed[msg.sender][_spender] = _value;
-    Approval(msg.sender, _spender, _value);
+    emit Approval(msg.sender, _spender, _value);
     return true;
   }
 
-  function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+  function allowance(address _owner, address _spender) view public returns(uint256 remaining) {
     return allowed[_owner][_spender];
   }
 
@@ -325,9 +325,9 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
 	
 	    function () payable  public {
 		 if(funding){ 
-        receivedEther(msg.sender, msg.value);
+        emit receivedEther(msg.sender, msg.value);
 		balances[msg.sender]=balances[msg.sender]+msg.value;
-		} else throw;
+		} else revert();
 		
     }
    
@@ -335,21 +335,21 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
 
 
 	
-  function setTokenInformation(string _name, string _symbol) {
+  function setTokenInformation(string memory _name, string memory _symbol) public {
     
 	   if (msg.sender != owner) {
-      throw;
+      revert();
     }
 	name = _name;
     symbol = _symbol;
 
-    UpdatedTokenInformation(name, symbol);
+    emit UpdatedTokenInformation(name, symbol);
   }
 
-function setChainsAddresses(address chainAd, int chainnumber) {
+function setChainsAddresses(address chainAd, int chainnumber) public {
     
 	   if (msg.sender != owner) {
-      throw;
+      revert();
     }
 	if(chainnumber==1){Chain1=chainAd;}
 	if(chainnumber==2){Chain2=chainAd;}
@@ -357,7 +357,7 @@ function setChainsAddresses(address chainAd, int chainnumber) {
 	if(chainnumber==4){Chain4=chainAd;}		
   } 
 
-  function DAOPolskaTokenICOregulations() external returns(string wow) {
+  function DAOPolskaTokenICOregulations() external returns(string memory wow) {
 	return 'Regulations of preICO and ICO are present at website  DAO Polska Token.network and by using this smartcontract and blockchains you commit that you accept and will follow those rules';
 }
 // if accidentally other token was donated to Project Dev
@@ -365,13 +365,13 @@ function setChainsAddresses(address chainAd, int chainnumber) {
 
 	function sendTokenAw(address StandardTokenAddress, address receiver, uint amount){
 		if (msg.sender != owner) {
-		throw;
+		revert();
 		}
 		sendTokenAway t = transfers[numTransfers];
 		t.coinContract = StandardToken(StandardTokenAddress);
 		t.amount = amount;
 		t.recipient = receiver;
-		t.coinContract.transfer(receiver, amount);
+		t.payable(coinContract).transfer(receiver, amount);
 		numTransfers++;
 	}
 
@@ -384,15 +384,15 @@ uint256 public fundingEndBlock = 5433616;
 bool public funding = true;
 bool public refundstate = false;
 bool public migratestate= false;
-        function createDaoPOLSKAtokens(address holder) payable {
+        function createDaoPOLSKAtokens(address holder) payable public {
 
-        if (!funding) throw;
+        if (!funding) revert();
 
         // Do not allow creating 0 or more than the cap tokens.
-        if (msg.value == 0) throw;
+        if (msg.value == 0) revert();
 		// check the maximum token creation cap
         if (msg.value > (supplylimit - totalSupply) / CreationRate)
-          throw;
+          revert();
 		
 		//bonus structure
 // in early stage there is about 100% more details in ico regulations on website
@@ -409,7 +409,7 @@ bool public migratestate= false;
         balances[holder] += numTokens;
         balancesRAW[holder] += numTokensRAW;
         // Log token creation event
-        Transfer(0, holder, numTokens);
+        emit Transfer(0, holder, numTokens);
 		
 		// Create additional Dao Tokens for the community and developers around 12%
         uint256 percentOfTotal = 12;
@@ -418,10 +418,10 @@ bool public migratestate= false;
         totalSupply += additionalTokens;
 
         balances[migrationMaster] += additionalTokens;
-        Transfer(0, migrationMaster, additionalTokens);
+        emit Transfer(0, migrationMaster, additionalTokens);
 	
 	}
-	function setBonusCreationRate(uint newRate){
+	function setBonusCreationRate(uint newRate) public {
 	if(msg.sender == owner) {
 	bonusCreationRate=newRate;
 	CreationRate=tokenCreationRate+bonusCreationRate;
@@ -429,73 +429,73 @@ bool public migratestate= false;
 	}
 
     function FundsTransfer() external {
-	if(funding==true) throw;
-		 	if (!owner.send(this.balance)) throw;
+	if(funding==true) revert();
+		 	if (!payable(owner).send(address(this).balance)) revert();
     }
 	
     function PartialFundsTransfer(uint SubX) external {
-	      if (msg.sender != owner) throw;
+	      if (msg.sender != owner) revert();
         
-        owner.send(this.balance - SubX);
+        payable(owner).send(address(this).balance - SubX);
 	}
 	function turnrefund() external {
-	      if (msg.sender != owner) throw;
+	      if (msg.sender != owner) revert();
 	refundstate=!refundstate;
         }
 		
 			function fundingState() external {
-	      if (msg.sender != owner) throw;
+	      if (msg.sender != owner) revert();
 	funding=!funding;
         }
     function turnmigrate() external {
-	      if (msg.sender != migrationMaster) throw;
+	      if (msg.sender != migrationMaster) revert();
 	migratestate=!migratestate;
 }
 
     // notice Finalize crowdfunding clossing funding options
 	
 function finalize() external {
-        if (block.number <= fundingEndBlock+8*oneweek) throw;
+        if (block.number <= fundingEndBlock+8*oneweek) revert();
         // Switch to Operational state. This is the only place this can happen.
         funding = false;	
 		refundstate=!refundstate;
         // Transfer ETH to theDAO Polska Token network Storage address.
         if (msg.sender==owner)
         
-		owner.send(this.balance);
+		payable(owner).send(address(this).balance);
     }
     function migrate(uint256 _value) external {
         // Abort if not in Operational Migration state.
-        if (migratestate) throw;
+        if (migratestate) revert();
 
 
         // Validate input value.
-        if (_value == 0) throw;
-        if (_value > balances[msg.sender]) throw;
+        if (_value == 0) revert();
+        if (_value > balances[msg.sender]) revert();
 
         balances[msg.sender] -= _value;
         totalSupply -= _value;
         totalMigrated += _value;
         MigrationAgent(migrationAgent).migrateFrom(msg.sender, _value);
-        Migrate(msg.sender, migrationAgent, _value);
+        emit Migrate(msg.sender, migrationAgent, _value);
     }
 	
 function refundTRA() external {
         // Abort if not in Funding Failure state.
-        if (funding) throw;
-        if (!refundstate) throw;
+        if (funding) revert();
+        if (!refundstate) revert();
 
         var DAOPLTokenValue = balances[msg.sender];
         var ETHValue = balancesRAW[msg.sender];
-        if (ETHValue == 0) throw;
+        if (ETHValue == 0) revert();
         balancesRAW[msg.sender] = 0;
         totalSupply -= DAOPLTokenValue;
          
-        Refund(msg.sender, ETHValue);
-        msg.sender.transfer(ETHValue);
+        emit Refund(msg.sender, ETHValue);
+        payable(msg.sender).transfer(ETHValue);
 }
 
-function preICOregulations() external returns(string wow) {
+function preICOregulations() external returns(string memory wow) {
 	return 'Regulations of preICO are present at website  daopolska.pl and by using this smartcontract you commit that you accept and will follow those rules';
 }
 

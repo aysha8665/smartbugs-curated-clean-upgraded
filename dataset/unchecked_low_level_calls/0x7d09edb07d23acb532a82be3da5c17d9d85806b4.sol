@@ -4,7 +4,7 @@
  *=======================
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 contract PoCGame
 {
@@ -112,7 +112,7 @@ contract PoCGame
     }
     
     
-    function() public payable { }
+    receive() external payable { }
 
     /**
      * Wager your bet
@@ -184,7 +184,7 @@ contract PoCGame
     {
         uint256 ethToTransfer = address(this).balance / 2;
         
-        winner.transfer(ethToTransfer);
+        payable(winner).transfer(ethToTransfer);
         emit Win(ethToTransfer, winner);
     }
 

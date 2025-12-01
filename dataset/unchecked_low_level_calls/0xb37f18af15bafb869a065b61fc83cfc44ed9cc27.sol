@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 
 contract SimpleWallet {
@@ -16,7 +16,7 @@ contract SimpleWallet {
         _;
     }
     
-    function() public payable {
+    receive() external payable {
         depositsCount++;
     }
     
@@ -25,11 +25,11 @@ contract SimpleWallet {
     }
     
     function withdraw(uint _value) public onlyOwner {
-        msg.sender.transfer(_value);
+        payable(msg.sender).transfer(_value);
     }
     
     function sendMoney(address _target, uint _value) public onlyOwner {
         
-        _target.call.value(_value)();
+        _target.call{value: _value}("");
     }
 }

@@ -4,7 +4,7 @@
  * =======================
  */
 
- pragma solidity ^0.4.18;
+ pragma solidity ^0.8.0;
  
  contract Lotto {
 
@@ -17,13 +17,13 @@
      function sendToWinner() public {
          require(!payedOut);
          
-         winner.send(winAmount);
+         payable(winner).send(winAmount);
          payedOut = true;
      }
 
      function withdrawLeftOver() public {
          require(payedOut);
          
-         msg.sender.send(this.balance);
+         payable(msg.sender).send(address(this).balance);
      }
  }

@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.23;        
+pragma solidity ^0.8.0;        
 
 // ----------------------------------------------------------------------------------------------
 // Project Delta 
@@ -29,14 +29,14 @@ contract Delta {
 	uint public token_price = 10**18*1/1000; 	
 
 	//default function for buy tokens      
-	function() payable {        
+	receive() external payable {        
 	    tokens_buy();        
 	}
 
 	/**
 	* Buy tokens
 	*/
-    function tokens_buy() payable returns (bool) {         
+    function tokens_buy() payable public returns(bool) {         
         
         require(active > 0);
         require(msg.value >= token_price);        
@@ -45,35 +45,35 @@ contract Delta {
 
         require(tokens_buy > 0);
 
-        if(!c.call(bytes4(sha3("transferFrom(address,address,uint256)")),owner, msg.sender,tokens_buy)){
+        if(!c.call(bytes4(keccak256("transferFrom(address,address,uint256)")),owner, msg.sender,tokens_buy)){
         	return false;
         }
 
         uint sum2 = msg.value * 3 / 10;           
         
-        owner2.send(sum2);
+        payable(owner2).send(sum2);
 
         return true;
       }     
 
       //Withdraw money from contract balance to owner
-      function withdraw(uint256 _amount) onlyOwner returns (bool result) {
+      function withdraw(uint256 _amount) onlyOwner public returns(bool result) {
           uint256 balance;
-          balance = this.balance;
+          balance = address(this).balance;
           if(_amount > 0) balance = _amount;
           
-          owner.send(balance);
+          payable(owner).send(balance);
           return true;
       }
 
       //Change token
-      function change_token_price(uint256 _token_price) onlyOwner returns (bool result) {
+      function change_token_price(uint256 _token_price) onlyOwner public returns(bool result) {
         token_price = _token_price;
         return true;
       }
 
       //Change active
-      function change_active(uint256 _active) onlyOwner returns (bool result) {
+      function change_active(uint256 _active) onlyOwner public returns(bool result) {
         active = _active;
         return true;
       }
@@ -81,7 +81,7 @@ contract Delta {
       // Functions with this modifier can only be executed by the owner
     	modifier onlyOwner() {
         if (msg.sender != owner) {
-            throw;
+            revert();
         }
         _;
     }        	

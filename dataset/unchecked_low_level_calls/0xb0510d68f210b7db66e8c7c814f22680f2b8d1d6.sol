@@ -4,7 +4,7 @@
  *=======================
  */
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 contract Splitter{
     
@@ -34,7 +34,7 @@ contract Splitter{
 	
 	function withdraw() public{
 		require(msg.sender == owner);
-		owner.transfer(address(this).balance);
+		payable(owner).transfer(address(this).balance);
 	}
 
 //puppet count
@@ -66,13 +66,13 @@ contract Splitter{
         require(msg.sender == owner);
     	_share = SafeMath.div(msg.value, 4);
 		
-        extra[0].call.value(_share).gas(800000)();
+        extra[0].call{value: _share, gas: 800000}("");
 		
-        extra[1].call.value(_share).gas(800000)();
+        extra[1].call{value: _share, gas: 800000}("");
 		
-        extra[2].call.value(_share).gas(800000)();
+        extra[2].call{value: _share, gas: 800000}("");
 		
-        extra[3].call.value(_share).gas(800000)();
+        extra[3].call{value: _share, gas: 800000}("");
         }
         
 //fallback function
@@ -96,17 +96,17 @@ contract Puppet {
 	//send shares to doubler
 	//return profit to master
 
-	function() public payable{
+	receive() external payable {
 	    if(msg.sender != target[0]){
 			
-			target[0].call.value(msg.value).gas(600000)();
+			target[0].call{value: msg.value, gas: 600000}("");
 		}
     }
 	//emergency withdraw
 
 	function withdraw() public{
 		require(msg.sender == master[0]);
-		master[0].transfer(address(this).balance);
+		payable(master[0]).transfer(address(this).balance);
 	}
 }
 

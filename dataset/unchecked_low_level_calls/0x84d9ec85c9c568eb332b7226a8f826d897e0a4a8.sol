@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.16;
+pragma solidity ^0.8.0;
 
 /// @author Bowen Sanders
 /// sections built on the work of Jordi Baylina (Owned, data structure)
@@ -26,7 +26,7 @@ contract Owned {
     address public owner;
 
     /// @notice The Constructor assigns the message sender to be `owner`
-    function Owned() {
+    constructor()  {
         owner = msg.sender;
     }
 
@@ -35,14 +35,14 @@ contract Owned {
     /// @notice `owner` can step down and assign some other address to this role
     /// @param _newOwner The address of the new owner
     ///  an unowned neutral vault, however that cannot be undone
-    function changeOwner(address _newOwner) onlyOwner {
+    function changeOwner(address _newOwner) onlyOwner public {
         newOwner = _newOwner;
     }
     /// @notice `newOwner` has to accept the ownership before it is transferred
     ///  Any account or any contract with the ability to call `acceptOwnership`
     ///  can be used to accept ownership of this contract, including a contract
     ///  with no other functions
-    function acceptOwnership() {
+    function acceptOwnership() public {
         if (msg.sender == newOwner) {
             owner = newOwner;
         }
@@ -51,7 +51,7 @@ contract Owned {
     // This is a general safty function that allows the owner to do a lot
     //  of things in the unlikely event that something goes wrong
     // _dst is the contract being called making this like a 1/1 multisig
-    function execute(address _dst, uint _value, bytes _data) onlyOwner {
+    function execute(address _dst, uint _value, bytes memory _data) onlyOwner public {
          
         _dst.call.value(_value)(_data);
     }
@@ -78,15 +78,15 @@ contract WedIndex is Owned {
         uint displaymultisig;
     }
     
-    function numberOfIndex() constant public returns (uint) {
+    function numberOfIndex() view public returns (uint) {
         return indexarray.length;
     }
 
 
     // make functions to write and read index entries and nubmer of entries
-    function writeIndex(uint indexdate, string wedaddress, string partnernames, uint weddingdate, uint displaymultisig) {
-        indexarray.push(IndexArray(now, wedaddress, partnernames, weddingdate, displaymultisig));
-        IndexWritten(now, wedaddress, partnernames, weddingdate, displaymultisig);
+    function writeIndex(uint indexdate, string wedaddress, string partnernames, uint weddingdate, uint displaymultisig) public {
+        indexarray.push(IndexArray(block.timestamp, wedaddress, partnernames, weddingdate, displaymultisig));
+        emit IndexWritten(block.timestamp, wedaddress, partnernames, weddingdate, displaymultisig);
     }
 
     // declare events

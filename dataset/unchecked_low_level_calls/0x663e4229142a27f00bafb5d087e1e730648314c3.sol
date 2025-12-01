@@ -4,13 +4,13 @@
  * =======================
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 
 contract ERC20 {
-    function totalSupply() constant returns (uint supply);
-    function balanceOf( address who ) constant returns (uint value);
-    function allowance( address owner, address spender ) constant returns (uint _allowance);
+    function totalSupply() view returns (uint supply);
+    function balanceOf( address who ) view returns (uint value);
+    function allowance( address owner, address spender ) view returns (uint _allowance);
 
     function transfer( address to, uint value) returns (bool ok);
     function transferFrom( address from, address to, uint value) returns (bool ok);
@@ -32,7 +32,7 @@ contract Ownable {
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
    */
-  function Ownable() {
+  constructor() payable {
     owner = msg.sender;
   }
 
@@ -50,7 +50,7 @@ contract Ownable {
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param newOwner The address to transfer ownership to.
    */
-  function transferOwnership(address newOwner) onlyOwner {
+  function transferOwnership(address newOwner) onlyOwner public {
     if (newOwner != address(0)) {
       owner = newOwner;
     }
@@ -74,10 +74,10 @@ contract ERC721 {
     event Approval(address owner, address approved, uint256 tokenId);
 
     // Optional
-    // function name() public view returns (string name);
-    // function symbol() public view returns (string symbol);
+    // function name() public view returns (string memory name);
+    // function symbol() public view returns (string memory symbol);
     // function tokensOfOwner(address _owner) external view returns (uint256[] tokenIds);
-    // function tokenMetadata(uint256 _tokenId, string _preferredTransport) public view returns (string infoUrl);
+    // function tokenMetadata(uint256 _tokenId, string memory _preferredTransport) public view returns (string memory infoUrl);
 
     // ERC-165 Compatibility (https://github.com/ethereum/EIPs/issues/165)
     function supportsInterface(bytes4 _interfaceID) external view returns (bool);
@@ -401,7 +401,7 @@ contract PandaBase is PandaAccessControl {
             delete pandaIndexToApproved[_tokenId];
         }
         // Emit the transfer event.
-        Transfer(_from, _to, _tokenId);
+        emit Transfer(_from, _to, _tokenId);
     }
 
     /// @dev An internal method that creates a new panda and stores it. This
@@ -473,7 +473,7 @@ contract PandaBase is PandaAccessControl {
 
         Panda memory _panda = Panda({
             genes: _genes,
-            birthTime: uint64(now),
+            birthTime: uint64(block.timestamp),
             cooldownEndBlock: 0,
             matronId: uint32(_matronId),
             sireId: uint32(_sireId),
@@ -488,7 +488,7 @@ contract PandaBase is PandaAccessControl {
         require(newKittenId == uint256(uint32(newKittenId)));
 
         // emit the birth event
-        Birth(
+        emit Birth(
             _owner,
             newKittenId,
             uint256(_panda.matronId),
@@ -659,7 +659,7 @@ contract PandaOwnership is PandaBase, ERC721 {
         _approve(_tokenId, _to);
 
         // Emit approval event.
-        Approval(msg.sender, _to, _tokenId);
+        emit Approval(msg.sender, _to, _tokenId);
     }
 
     /// @notice Transfer a Panda owned by another address, for which the calling address
@@ -766,7 +766,7 @@ contract PandaOwnership is PandaBase, ERC721 {
     /// @dev Adapted from toString(slice) by @arachnid (Nick Johnson <arachnid@notdot.net>)
     ///  This method is licenced under the Apache License.
     ///  Ref: https://github.com/Arachnid/solidity-stringutils/blob/2f6ca9accb48ae14c66f1437ec50ed19a0616f78/strings.sol
-    function _toString(bytes32[4] _rawBytes, uint256 _stringLength) private view returns (string) {
+    function _toString(bytes32[4] _rawBytes, uint256 _stringLength) private view returns(string memory) {
         var outputString = new string(_stringLength);
         uint256 outputPtr;
         uint256 bytesPtr;
@@ -863,7 +863,7 @@ contract PandaBreeding is PandaOwnership {
     /// @notice Grants approval to another user to sire with one of your Pandas.
     /// @param _addr The address that will be able to sire with your Panda. Set to
     ///  address(0) to clear all siring approvals for this Panda.
-    /// @param _sireId A Panda that you own that _addr will now be able to sire with.
+    /// @param _sireId A Panda that you own that _addr will block.timestamp be able to sire with.
     function approveSiring(address _addr, uint256 _sireId)
     external
     whenNotPaused {
@@ -1022,7 +1022,7 @@ contract PandaBreeding is PandaOwnership {
         childOwner[_matronId] = _owner;
 
         // Emit the pregnancy event.
-        Pregnant(pandaIndexToOwner[_matronId], _matronId, _sireId, matron.cooldownEndBlock);
+        emit Pregnant(pandaIndexToOwner[_matronId], _matronId, _sireId, matron.cooldownEndBlock);
     }
 
     /// @notice Breed a Panda you own (as matron) with a sire that you own, or for which you
@@ -1128,12 +1128,12 @@ contract PandaBreeding is PandaOwnership {
         if (parentGen == 0 && gen0CreatedCount == GEN0_TOTAL_COUNT) {
             probability = 0;
         }
-        if (uint256(keccak256(block.blockhash(block.number - 2), now)) % 100 < probability) {
+        if (uint256(keccak256(abi.encodePacked(block.blockhash(block.number - 2)), block.timestamp)) % 100 < probability) {
             // Make the new kitten!
             address owner = childOwner[_matronId];
             kittenId = _createPanda(_matronId, matron.siringWithId, parentGen + 1, childGenes, owner);
         } else {
-            Abortion(pandaIndexToOwner[_matronId], _matronId, sireId);
+            emit Abortion(pandaIndexToOwner[_matronId], _matronId, sireId);
         }
         // Make the new kitten!
         //address owner = pandaIndexToOwner[_matronId];
@@ -1149,7 +1149,7 @@ contract PandaBreeding is PandaOwnership {
 
         // Send the balance fee to the person who made birth happen.
         
-        msg.sender.send(autoBirthFee);
+        payable(msg.sender).send(autoBirthFee);
 
         delete childOwner[_matronId];
 
@@ -1220,7 +1220,7 @@ contract ClockAuctionBase {
     /// @param _tokenId - ID of token to transfer.
     function _transfer(address _receiver, uint256 _tokenId) internal {
         // it will throw if transfer fails
-        nonFungibleContract.transfer(_receiver, _tokenId);
+        payable(nonFungibleContract).transfer(_receiver, _tokenId);
     }
 
     /// @dev Adds an auction to the list of open auctions. Also fires the
@@ -1234,7 +1234,7 @@ contract ClockAuctionBase {
 
         tokenIdToAuction[_tokenId] = _auction;
 
-        AuctionCreated(
+        emit AuctionCreated(
             uint256(_tokenId),
             uint256(_auction.startingPrice),
             uint256(_auction.endingPrice),
@@ -1246,7 +1246,7 @@ contract ClockAuctionBase {
     function _cancelAuction(uint256 _tokenId, address _seller) internal {
         _removeAuction(_tokenId);
         _transfer(_seller, _tokenId);
-        AuctionCancelled(_tokenId);
+        emit AuctionCancelled(_tokenId);
     }
 
     /// @dev Computes the price and transfers winnings.
@@ -1292,7 +1292,7 @@ contract ClockAuctionBase {
             // before calling transfer(), and the only thing the seller
             // can DoS is the sale of their own asset! (And if it's an
             // accident, they can call cancelAuction(). )
-            seller.transfer(sellerProceeds);
+            payable(seller).transfer(sellerProceeds);
         }
 
         // Calculate any excess funds included with the bid. If the excess
@@ -1304,10 +1304,10 @@ contract ClockAuctionBase {
         // Return the funds. Similar to the previous transfer, this is
         // not susceptible to a re-entry attack because the auction is
         // removed before any transfers occur.
-        msg.sender.transfer(bidExcess);
+        payable(msg.sender).transfer(bidExcess);
 
         // Tell the world!
-        AuctionSuccessful(_tokenId, price, msg.sender);
+        emit AuctionSuccessful(_tokenId, price, msg.sender);
 
         return price;
     }
@@ -1339,9 +1339,9 @@ contract ClockAuctionBase {
 
         // A bit of insurance against negative values (or wraparound).
         // Probably not necessary (since Ethereum guarnatees that the
-        // now variable doesn't ever go backwards).
-        if (now > _auction.startedAt) {
-            secondsPassed = now - _auction.startedAt;
+        // block.timestamp variable doesn't ever go backwards).
+        if (block.timestamp > _auction.startedAt) {
+            secondsPassed = block.timestamp - _auction.startedAt;
         }
 
         return _computeCurrentPrice(
@@ -1439,18 +1439,18 @@ contract Pausable is Ownable {
   /**
    * @dev called by the owner to pause, triggers stopped state
    */
-  function pause() onlyOwner whenNotPaused returns (bool) {
+  function pause() onlyOwner whenNotPaused public returns(bool) {
     paused = true;
-    Pause();
+    emit Pause();
     return true;
   }
 
   /**
    * @dev called by the owner to unpause, returns to normal state
    */
-  function unpause() onlyOwner whenPaused returns (bool) {
+  function unpause() onlyOwner whenPaused public returns(bool) {
     paused = false;
-    Unpause();
+    emit Unpause();
     return true;
   }
 }
@@ -1471,7 +1471,7 @@ contract ClockAuction is Pausable, ClockAuctionBase {
     ///  the Nonfungible Interface.
     /// @param _cut - percent cut the owner takes on each auction, must be
     ///  between 0-10,000.
-    function ClockAuction(address _nftAddress, uint256 _cut) public {
+    constructor(address _nftAddress, uint256 _cut) payable {
         require(_cut <= 10000);
         ownerCut = _cut;
 
@@ -1493,7 +1493,7 @@ contract ClockAuction is Pausable, ClockAuctionBase {
         );
         // We are using this boolean method to make sure that even if one fails it will still work
         
-        bool res = nftAddress.send(this.balance);
+        bool res = payable(nftAddress).send(address(this).balance);
     }
 
     /// @dev Creates and begins a new auction.
@@ -1526,7 +1526,7 @@ contract ClockAuction is Pausable, ClockAuctionBase {
             uint128(_startingPrice),
             uint128(_endingPrice),
             uint64(_duration),
-            uint64(now),
+            uint64(block.timestamp),
             0
         );
         _addAuction(_tokenId, auction);
@@ -1656,7 +1656,7 @@ contract SiringClockAuction is ClockAuction {
             uint128(_startingPrice),
             uint128(_endingPrice),
             uint64(_duration),
-            uint64(now),
+            uint64(block.timestamp),
             0
         );
         _addAuction(_tokenId, auction);
@@ -1737,7 +1737,7 @@ contract SaleClockAuction is ClockAuction {
             uint128(_startingPrice),
             uint128(_endingPrice),
             uint64(_duration),
-            uint64(now),
+            uint64(block.timestamp),
             0
         );
         _addAuction(_tokenId, auction);
@@ -1765,7 +1765,7 @@ contract SaleClockAuction is ClockAuction {
             uint128(_startingPrice),
             uint128(_endingPrice),
             uint64(_duration),
-            uint64(now),
+            uint64(block.timestamp),
             1
         );
         _addAuction(_tokenId, auction);
@@ -1805,7 +1805,7 @@ contract SaleClockAuction is ClockAuction {
         external
         payable
     {
-        bytes32 bHash = keccak256(block.blockhash(block.number),block.blockhash(block.number-1));
+        bytes32 bHash = keccak256(abi.encodePacked(block.blockhash(block.number)),block.blockhash(block.number-1));
         uint256 PandaIndex;
         if (bHash[25] > 0xC8) {
             require(uint256(RarePanda.length) >= RarePandaIndex);
@@ -1897,7 +1897,7 @@ contract SaleClockAuctionERC20 is ClockAuction {
             uint128(_startingPrice),
             uint128(_endingPrice),
             uint64(_duration),
-            uint64(now),
+            uint64(block.timestamp),
             0
         );
         _addAuctionERC20(_tokenId, auction, _erc20Address);
@@ -1915,7 +1915,7 @@ contract SaleClockAuctionERC20 is ClockAuction {
 
         tokenIdToAuction[_tokenId] = _auction;
 
-        AuctionERC20Created(
+        emit AuctionERC20Created(
             uint256(_tokenId),
             uint256(_auction.startingPrice),
             uint256(_auction.endingPrice),
@@ -2010,7 +2010,7 @@ contract SaleClockAuctionERC20 is ClockAuction {
         }
 
         // Tell the world!
-        AuctionSuccessful(_tokenId, price, msg.sender);
+        emit AuctionSuccessful(_tokenId, price, msg.sender);
 
         return price;
     }
@@ -2357,7 +2357,7 @@ contract PandaCore is PandaMinting {
 
 
     /// @notice Creates the main CryptoPandas smart contract instance.
-    function PandaCore() public {
+    constructor() payable {
         // Starts paused.
         paused = true;
 
@@ -2395,14 +2395,14 @@ contract PandaCore is PandaMinting {
     function setNewAddress(address _v2Address) external onlyCEO whenPaused {
         // See README.md for updgrade plan
         newContractAddress = _v2Address;
-        ContractUpgrade(_v2Address);
+        emit ContractUpgrade(_v2Address);
     }
     
 
     /// @notice No tipping!
     /// @dev Reject all Ether from being sent here, unless it's from one of the
     ///  two auction contracts. (Hopefully, we can prevent user accidents.)
-    function() external payable {
+    receive() external payable {
         require(
             msg.sender == address(saleAuction) ||
             msg.sender == address(siringAuction)
@@ -2458,13 +2458,13 @@ contract PandaCore is PandaMinting {
 
     // @dev Allows the CFO to capture the balance available to the contract.
     function withdrawBalance() external onlyCFO {
-        uint256 balance = this.balance;
+        uint256 balance = address(this).balance;
         // Subtract all the currently pregnant kittens we have, plus 1 of margin.
         uint256 subtractFees = (pregnantPandas + 1) * autoBirthFee;
 
         if (balance > subtractFees) {
              
-            cfoAddress.send(balance - subtractFees);
+            payable(cfoAddress).send(balance - subtractFees);
         }
     }
 }

@@ -4,13 +4,13 @@
  * =======================
  */
 
-pragma solidity ^0.4.0;
+pragma solidity ^0.8.0;
 contract SendBack {
     mapping (address => uint) userBalances;
-    function withdrawBalance() {  
+    function withdrawBalance() public {  
 		uint amountToWithdraw = userBalances[msg.sender];
 		userBalances[msg.sender] = 0;
         
-		msg.sender.send(amountToWithdraw);
+		payable(msg.sender).send(amountToWithdraw);
 	}
 }

@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.18;
+pragma solidity ^0.8.0;
 
 contract EBU{
     address public from = 0x9797055B68C5DadDE6b3c7d5D80C9CFE2eecE6c9;

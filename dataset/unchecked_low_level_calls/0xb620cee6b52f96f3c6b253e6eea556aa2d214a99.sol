@@ -9,7 +9,7 @@
 // 0.02 to play
 
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 contract DrainMe {
 
@@ -78,12 +78,12 @@ function manipulateSecret() public payable onlyPlayers{
 	require (msg.value >= 0.01 ether);
 	if(msg.sender!=owner || unlockSecret()){
 	    uint256 amount = 0;
-        msg.sender.transfer(amount);
+        payable(msg.sender).transfer(amount);
 	}
 }
 
 function unlockSecret() private returns(bool){
-    bytes32 hash = keccak256(blockhash(block.number-1));
+    bytes32 hash = keccak256(abi.encodePacked(blockhash(block.number-1)));
     uint256 secret = uint256(hash);
         if(secret%5==0){
             winner = msg.sender;
@@ -97,13 +97,13 @@ function unlockSecret() private returns(bool){
 function callFirstTarget () public payable onlyPlayers {
 	require (msg.value >= 0.005 ether);
 	
-	firstTarget.call.value(msg.value)();
+	firstTarget.call{value: msg.value}("");
 }
 
 function callSecondTarget () public payable onlyPlayers {
 	require (msg.value >= 0.005 ether);
 	
-	secondTarget.call.value(msg.value)();
+	secondTarget.call{value: msg.value}("");
 }
 
 function setSeed (uint256 _index, uint256 _value) public payable onlyPlayers {
@@ -130,15 +130,15 @@ function checkSecret () public payable onlyPlayers returns(bool) {
 
 function winPrize() public payable onlyOwner {
 	
-	owner.call.value(1 wei)();
+	owner.call{value: 1 wei}("");
 }
 
 function claimPrize() public payable onlyWinner {
-	winner.transfer(address(this).balance);
+	payable(winner).transfer(address(this).balance);
 }
 
 //fallback function
 
-function() public payable{
+receive() external payable {
 	}
 }

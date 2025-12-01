@@ -4,10 +4,10 @@
  * =======================
  */
 
-pragma solidity ^0.4.11; /* originally >=0.4.11 */
+pragma solidity ^0.8.0; /* originally >=0.4.11 */
 
 contract Owned {
-    function Owned() {
+    constructor()  {
         owner = msg.sender;
     }
 
@@ -18,14 +18,14 @@ contract Owned {
     // definition of a modifier appears.
     modifier onlyOwner { if (msg.sender == owner) _; }
 
-    function changeOwner(address _newOwner) onlyOwner {
+    function changeOwner(address _newOwner) onlyOwner public {
         owner = _newOwner;
     }
 
     // This is a general safty function that allows the owner to do a lot
     //  of things in the unlikely event that something goes wrong
     // _dst is the contract being called making this like a 1/1 multisig
-    function execute(address _dst, uint _value, bytes _data) onlyOwner {
+    function execute(address _dst, uint _value, bytes memory _data) onlyOwner public {
         
         _dst.call.value(_value)(_data);
     }
@@ -33,7 +33,7 @@ contract Owned {
 // to get the needed token functions in the contract
 contract Token {
     function transfer(address, uint) returns(bool);
-    function balanceOf(address) constant returns (uint);
+    function balanceOf(address) view returns (uint);
 }
 
 contract TokenSender is Owned {
@@ -50,7 +50,7 @@ contract TokenSender is Owned {
 
     Transfer[] public transfers;
 
-    function TokenSender(address _token) {
+    constructor(address _token)  {
         token = Token(_token);
     }
 
@@ -63,10 +63,10 @@ contract TokenSender is Owned {
     //  long number and then this number is deconstructed in this function to
     //  save gas and reduce the number of `0`'s that are needed to be stored
     //   on the blockchain
-    function fill(uint[] data) onlyOwner {
+    function fill(uint[] data) onlyOwner public {
 
         // If the send has started then we just throw
-        if (next>0) throw;
+        if (next>0) revert();
 
         uint acc;
         uint offset = transfers.length;
@@ -84,7 +84,7 @@ contract TokenSender is Owned {
     // This function actually makes the sends and tracks the amount of gas used
     //  if it takes more gas than was sent with the transaction then this
     //  function will need to be called a few times until
-    function run() onlyOwner {
+    function run() onlyOwner public {
         if (transfers.length == 0) return;
 
         // Keep next in the stack var mNext to save gas
@@ -93,13 +93,13 @@ contract TokenSender is Owned {
         // Set the contract as finalized to avoid reentrance
         next = transfers.length;
 
-        if ((mNext == 0 ) && ( token.balanceOf(this) != totalToDistribute)) throw;
+        if ((mNext == 0 ) && ( token.balanceOf(this) != totalToDistribute)) revert();
 
         while ((mNext<transfers.length) && ( gas() > 150000 )) {
             uint amount = transfers[mNext].amount;
             address addr = transfers[mNext].addr;
             if (amount > 0) {
-                if (!token.transfer(addr, transfers[mNext].amount)) throw;
+                if (!payable(token).transfer(addr, transfers[mNext].amount)) revert();
             }
             mNext ++;
         }
@@ -113,13 +113,13 @@ contract TokenSender is Owned {
     // Helper functions
     ///////////////////////
 
-    function hasTerminated() constant returns (bool) {
+    function hasTerminated() view public returns(bool) {
         if (transfers.length == 0) return false;
         if (next < transfers.length) return false;
         return true;
     }
 
-    function nTransfers() constant returns (uint) {
+    function nTransfers() view public returns(uint) {
         return transfers.length;
     }
 
