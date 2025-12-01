@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.25;
+pragma solidity ^0.8.0;
 
 contract TimedCrowdsale {
   // Sale should finish exactly at January 1, 2019

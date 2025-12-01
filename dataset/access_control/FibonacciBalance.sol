@@ -5,7 +5,7 @@
  */
 
 //added pragma version
-pragma solidity ^0.4.22;
+pragma solidity ^0.8.0;
 
 contract FibonacciBalance {
 
@@ -16,24 +16,24 @@ contract FibonacciBalance {
     uint public start = 3;
     uint public withdrawalCounter;
     
-    bytes4 constant fibSig = bytes4(sha3("setFibonacci(uint256)"));
+    bytes4 constant fibSig = bytes4(keccak256("setFibonacci(uint256)"));
 
     
-    constructor(address _fibonacciLibrary) public payable {
+    constructor(address _fibonacciLibrary) payable {
         fibonacciLibrary = _fibonacciLibrary;
     }
 
-    function withdraw() {
+    function withdraw() public {
         withdrawalCounter += 1;
         
         
         
         require(fibonacciLibrary.delegatecall(fibSig, withdrawalCounter));
-        msg.sender.transfer(calculatedFibNumber * 1 ether);
+        payable(msg.sender).transfer(calculatedFibNumber * 1 ether);
     }
 
     
-    function() public {
+    fallback() external {
         
         require(fibonacciLibrary.delegatecall(msg.data));
     }

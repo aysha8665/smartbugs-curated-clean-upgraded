@@ -4,7 +4,7 @@
  * =======================
  */
 
- pragma solidity ^0.4.15;
+ pragma solidity ^0.8.0;
 
  contract Unp{
      address private owner;
@@ -14,9 +14,9 @@
          _;
      }
 
-     function Unp()
-         public
-     {
+     constructor()
+         
+      {
          owner = msg.sender;
      }
 

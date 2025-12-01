@@ -4,7 +4,7 @@
  * =======================
  */
 
- pragma solidity ^0.4.24;
+ pragma solidity ^0.8.0;
 
  /* =======================
     =======================
@@ -16,7 +16,7 @@
 
      mapping(address => uint256) balances;
 
-     constructor() public {
+     constructor() payable {
          creator = msg.sender;
      }
 
@@ -27,20 +27,20 @@
 
      function withdraw(uint256 amount) public {
          require(amount <= balances[msg.sender]);
-         msg.sender.transfer(amount);
+         payable(msg.sender).transfer(amount);
          balances[msg.sender] -= amount;
      }
 
      function refund() public {
          
-         msg.sender.transfer(balances[msg.sender]);
+         payable(msg.sender).transfer(balances[msg.sender]);
      }
 
      // In an emergency the owner can migrate  allfunds to a different address.
 
      function migrateTo(address to) public {
          require(creator == msg.sender);
-         to.transfer(this.balance);
+         payable(to).transfer(address(this).balance);
      }
 
  }

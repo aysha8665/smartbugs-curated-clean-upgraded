@@ -4,7 +4,7 @@
  * ======================
  */
 
- pragma solidity ^0.4.24;
+ pragma solidity ^0.8.0;
 
  
 
@@ -25,6 +25,6 @@
      }
      function withdraw() public{
        require(msg.sender == owner);
-       msg.sender.transfer(address(this).balance);
+       payable(msg.sender).transfer(address(this).balance);
      }
  }

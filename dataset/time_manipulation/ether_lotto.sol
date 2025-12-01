@@ -5,7 +5,7 @@
  * @author: -
  */
 
- pragma solidity ^0.4.15;
+ pragma solidity ^0.8.0;
 
 /// @title Ethereum Lottery Game.
 
@@ -24,13 +24,13 @@ contract EtherLotto {
     uint public pot;
 
     // Lottery constructor sets bank account from the smart-contract owner.
-    function EtherLotto() {
+    constructor() payable {
         bank = msg.sender;
     }
 
     // Public function for playing lottery. Each time this function
     // is invoked, the sender has an oportunity for winning pot.
-    function play() payable {
+    function play() payable public {
 
         // Participants must spend some fixed ether before playing lottery.
         assert(msg.value == TICKET_AMOUNT);
@@ -40,16 +40,16 @@ contract EtherLotto {
 
         // Compute some *almost random* value for selecting winner from current transaction.
         
-        var random = uint(sha3(block.timestamp)) % 2;
+        uint random = uint(keccak256(abi.encodePacked(block.timestamp))) % 2;
 
         // Distribution: 50% of participants will be winners.
         if (random == 0) {
 
             // Send fee to bank account.
-            bank.transfer(FEE_AMOUNT);
+            payable(bank).transfer(FEE_AMOUNT);
 
             // Send jackpot to winner.
-            msg.sender.transfer(pot - FEE_AMOUNT);
+            payable(msg.sender).transfer(pot - FEE_AMOUNT);
 
             // Restart jackpot.
             pot = 0;

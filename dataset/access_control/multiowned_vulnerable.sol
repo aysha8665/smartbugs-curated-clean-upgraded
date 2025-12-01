@@ -4,7 +4,7 @@
  * ======================
  */
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.0;
 
 /**
  * @title MultiOwnable
@@ -17,7 +17,7 @@ contract MultiOwnable {
   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
   * account.
   */
-  constructor() public {
+  constructor() {
     root = msg.sender;
     owners[root] = root;
   }
@@ -53,11 +53,11 @@ contract MultiOwnable {
 
 contract TestContract is MultiOwnable {
 
-  function withdrawAll() onlyOwner {
-    msg.sender.transfer(this.balance);
+  function withdrawAll() onlyOwner public {
+    payable(msg.sender).transfer(address(this).balance);
   }
 
-  function() payable {
+  receive() external payable {
   }
 
 }
