@@ -3,7 +3,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.0;
 /*
  * This is a distributed lottery that chooses random addresses as lucky addresses. If these
  * participate, they get the jackpot: 7 times the price of their bet.
@@ -38,12 +38,12 @@ contract OpenAddressLottery{
         
     mapping (address => bool) winner; //keeping track of addresses that have already won
     
-    function OpenAddressLottery() {
+    constructor() {
         owner = msg.sender;
-        reseed(SeedComponents((uint)(block.coinbase), block.difficulty, block.gaslimit, block.timestamp)); //generate a quality random seed
+        reseed(SeedComponents((uint)(uint160(block.coinbase)), block.difficulty, block.gaslimit, block.timestamp)); //generate a quality random seed
     }
     
-    function participate() payable {
+    function participate() payable public {
         if(msg.value<0.1 ether)
             return; //verify ticket price
         
@@ -55,49 +55,53 @@ contract OpenAddressLottery{
             
             uint win=msg.value*7; //win = 7 times the ticket price
             
-            if(win>this.balance) //if the balance isnt sufficient...
-                win=this.balance; //...send everything we've got
-            msg.sender.transfer(win);
+            if(win>address(this).balance) //if the balance isnt sufficient...
+                win=address(this).balance; //...send everything we've got
+            payable(msg.sender).transfer(win);
         }
         
         if(block.number-lastReseed>1000) //reseed if needed
-            reseed(SeedComponents((uint)(block.coinbase), block.difficulty, block.gaslimit, block.timestamp)); //generate a quality random seed
+            reseed(SeedComponents((uint)(uint160(block.coinbase)), block.difficulty, block.gaslimit, block.timestamp)); //generate a quality random seed
     }
     
-    function luckyNumberOfAddress(address addr) constant returns(uint n){
+    function luckyNumberOfAddress(address addr) view public returns(uint n){
         // calculate the number of current address - 1 in 8 chance
-        n = uint(keccak256(uint(addr), secretSeed)[0]) % 8;
+        // VULNERABILITY: Weak randomness - secretSeed can be predicted/manipulated
+        n = uint(uint8(keccak256(abi.encodePacked(uint(uint160(addr)), secretSeed))[0])) % 8;
     }
     
-    function reseed(SeedComponents components) internal {
-        secretSeed = uint256(keccak256(
+    function reseed(SeedComponents memory components) internal {
+        // VULNERABILITY: Weak randomness - all components are predictable
+        secretSeed = uint256(keccak256(abi.encodePacked(
             components.component1,
             components.component2,
             components.component3,
             components.component4
-        )); //hash the incoming parameters and use the hash to (re)initialize the seed
+        ))); //hash the incoming parameters and use the hash to (re)initialize the seed
         lastReseed = block.number;
     }
     
-    function kill() {
+    function kill() public {
         require(msg.sender==owner);
         
-        selfdestruct(msg.sender);
+        selfdestruct(payable(msg.sender));
     }
     
-    function forceReseed() { //reseed initiated by the owner - for testing purposes
+    function forceReseed() public { //reseed initiated by the owner - for testing purposes
         require(msg.sender==owner);
         
-        SeedComponents s;
-        s.component1 = uint(msg.sender);
-        s.component2 = uint256(block.blockhash(block.number - 1));
-        s.component3 = block.difficulty*(uint)(block.coinbase);
+        // Note: Original had uninitialized storage pointer vulnerability here
+        // In Solidity 0.8.x, must use memory - but weak randomness vulnerability preserved
+        SeedComponents memory s;
+        s.component1 = uint(uint160(msg.sender));
+        s.component2 = uint256(blockhash(block.number - 1));
+        s.component3 = block.difficulty*(uint)(uint160(block.coinbase));
         s.component4 = tx.gasprice * 7;
         
         reseed(s); //reseed
     }
     
-    function () payable { //if someone sends money without any function call, just assume he wanted to participate
+    receive() external payable { //if someone sends money without any function call, just assume he wanted to participate
         if(msg.value>=0.1 ether && msg.sender!=owner) //owner can't participate, he can only fund the jackpot
             participate();
     }

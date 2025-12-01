@@ -4,7 +4,8 @@
  */
 // A Locked Name Registrar
 
-pragma solidity ^0.4.15;
+pragma solidity ^0.8.0;
+
 contract NameRegistrar {
 
     bool public unlocked = false;  // registrar locked, no name updates
@@ -20,7 +21,10 @@ contract NameRegistrar {
     function register(bytes32 _name, address _mappedAddress) public {
         // set up the new NameRecord
         
-        NameRecord newRecord;
+        // Note: Original vulnerability was uninitialized storage pointer that 
+        // overwrote slot 0 (unlocked). In Solidity 0.8.x, local struct variables
+        // must use explicit memory location - storage pointer vulnerability not possible.
+        NameRecord memory newRecord;
         newRecord.name = _name;
         newRecord.mappedAddress = _mappedAddress;
 
