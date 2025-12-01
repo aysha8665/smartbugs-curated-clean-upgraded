@@ -6,7 +6,7 @@
  */
 
  //added pragma version
-pragma solidity ^0.4.0;
+pragma solidity ^0.8.0;
 
  contract LuckyDoubler {
 //##########################################################
@@ -30,7 +30,7 @@ pragma solidity ^0.4.0;
     uint[] private unpaidEntries;
 
     //Set owner on contract creation
-    function LuckyDoubler() {
+    constructor() payable {
         owner = msg.sender;
     }
 
@@ -50,14 +50,14 @@ pragma solidity ^0.4.0;
     }
 
     //Fallback function
-    function() {
+    function() public {
         init();
     }
 
     function init() private{
 
         if (msg.value < 1 ether) {
-             msg.sender.send(msg.value);
+             payable(msg.sender).send(msg.value);
             return;
         }
 
@@ -71,7 +71,7 @@ pragma solidity ^0.4.0;
 
         if (msg.value > 1 ether) {
 
-        	msg.sender.send(msg.value - 1 ether);
+        	payable(msg.sender).send(msg.value - 1 ether);
         	dValue = 1 ether;
         }
 
@@ -99,7 +99,7 @@ pragma solidity ^0.4.0;
 
             uint payout = theEntry.payout;
 
-            theEntry.entryAddress.send(payout);
+            theEntry.payable(entryAddress).send(payout);
             theEntry.paid = true;
             users[theEntry.entryAddress].payoutsReceived++;
 
@@ -113,10 +113,10 @@ pragma solidity ^0.4.0;
         }
 
         //Collect money from fees and possible leftovers from errors (actual balance untouched)
-        uint fees = this.balance - balance;
+        uint fees = address(this).balance - balance;
         if (fees > 0)
         {
-                owner.send(fees);
+                payable(owner).send(fees);
         }
 
     }
@@ -124,51 +124,50 @@ pragma solidity ^0.4.0;
     //Generate random number between 0 & max
     uint256 constant private FACTOR =  1157920892373161954235709850086879078532699846656405640394575840079131296399;
     
-    function rand(uint max) constant private returns (uint256 result){
+    function rand(uint max) view private returns (uint256 result){
         uint256 factor = FACTOR * 100 / max;
         uint256 lastBlockNumber = block.number - 1;
-        uint256 hashVal = uint256(block.blockhash(lastBlockNumber));
+        uint256 hashVal = uint256(blockhash(lastBlockNumber));
 
         return uint256((uint256(hashVal) / factor)) % max;
     }
 
 
     //Contract management
-    function changeOwner(address newOwner) onlyowner {
+    function changeOwner(address newOwner) onlyowner public {
         owner = newOwner;
     }
 
-    function changeMultiplier(uint multi) onlyowner {
-        if (multi < 110 || multi > 150) throw;
+    function changeMultiplier(uint multi) onlyowner public {
+        if (multi < 110 || multi > 150) revert();
 
         multiplier = multi;
     }
 
-    function changeFee(uint newFee) onlyowner {
+    function changeFee(uint newFee) onlyowner public {
         if (fee > 5)
-            throw;
+            revert();
         fee = newFee;
     }
 
 
     //JSON functions
-    function multiplierFactor() constant returns (uint factor, string info) {
+    function multiplierFactor() view public returns(uint factor, string memory info) {
         factor = multiplier;
         info = 'The current multiplier applied to all deposits. Min 110%, max 150%.';
     }
 
-    function currentFee() constant returns (uint feePercentage, string info) {
+    function currentFee() view public returns(uint feePercentage, string memory info) {
         feePercentage = fee;
         info = 'The fee percentage applied to all deposits. It can change to speed payouts (max 5%).';
     }
 
-    function totalEntries() constant returns (uint count, string info) {
+    function totalEntries() view public returns(uint count, string memory info) {
         count = entries.length;
         info = 'The number of deposits.';
     }
 
-    function userStats(address user) constant returns (uint deposits, uint payouts, string info)
-    {
+    function userStats(address user) view public returns(uint deposits, uint payouts, string memory info) {
         if (users[user].id != address(0x0))
         {
             deposits = users[user].deposits;
@@ -177,8 +176,7 @@ pragma solidity ^0.4.0;
         }
     }
 
-    function entryDetails(uint index) constant returns (address user, uint payout, bool paid, string info)
-    {
+    function entryDetails(uint index) view public returns(address user, uint payout, bool paid, string memory info) {
         if (index < entries.length) {
             user = entries[index].entryAddress;
             payout = entries[index].payout / 1 finney;

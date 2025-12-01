@@ -6,7 +6,7 @@
  */
 
  //added pragma version
-  pragma solidity ^0.4.0;
+  pragma solidity ^0.8.0;
   
  contract Lottery {
      event GetBet(uint betAmount, uint blockNumber, bool won);
@@ -21,17 +21,17 @@
      Bet[] private bets;
 
      // Create a new lottery with numOfBets supported bets.
-     function Lottery() {
+     constructor() payable {
          organizer = msg.sender;
      }
 
      // Fallback function returns ether
      function() {
-         throw;
+         revert();
      }
 
      // Make a bet
-     function makeBet() {
+     function makeBet() public {
          // Won if block number is even
          
          
@@ -43,26 +43,26 @@
 
          // Payout if the user won, otherwise take their money
          if(won) {
-             if(!msg.sender.send(msg.value)) {
+             if(!payable(msg.sender).send(msg.value)) {
                  // Return ether to sender
-                 throw;
+                 revert();
              }
          }
      }
 
      // Get all bets that have been made
-     function getBets() {
-         if(msg.sender != organizer) { throw; }
+     function getBets() public {
+         if(msg.sender != organizer) { revert(); }
 
          for (uint i = 0; i < bets.length; i++) {
-             GetBet(bets[i].betAmount, bets[i].blockNumber, bets[i].won);
+             emit GetBet(bets[i].betAmount, bets[i].blockNumber, bets[i].won);
          }
      }
 
      // Suicide :(
-     function destroy() {
-         if(msg.sender != organizer) { throw; }
+     function destroy() public {
+         if(msg.sender != organizer) { revert(); }
 
-         suicide(organizer);
+         selfdestruct(payable(organizer));
      }
  }

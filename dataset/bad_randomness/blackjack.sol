@@ -5,7 +5,7 @@
  * =======================
  */
 
- pragma solidity ^0.4.9;
+ pragma solidity ^0.8.0;
 
 library Deck {
 	// =======================
@@ -18,10 +18,10 @@ library Deck {
 		
 		uint timestamp = block.timestamp;
 		
-		return uint8(uint256(keccak256(block.blockhash(b), player, cardNumber, timestamp)) % 52);
+		return uint8(uint256(keccak256(abi.encodePacked(blockhash(b), player, cardNumber, timestamp))) % 52);
 	}
 
-	function valueOf(uint8 card, bool isBigAce) internal constant returns (uint8) {
+	function valueOf(uint8 card, bool isBigAce) internal view returns (uint8) {
 		uint8 value = card / 4;
 		if (value == 0 || value == 11 || value == 12) { 
 			return 10;
@@ -32,11 +32,11 @@ library Deck {
 		return value;
 	}
 
-	function isAce(uint8 card) internal constant returns (bool) {
+	function isAce(uint8 card) internal view returns (bool) {
 		return card / 4 == 1;
 	}
 
-	function isTen(uint8 card) internal constant returns (bool) {
+	function isTen(uint8 card) internal view returns (bool) {
 		return card / 4 == 10;
 	}
 }
@@ -67,7 +67,7 @@ contract BlackJack {
 
 	modifier gameIsGoingOn() {
 		if (games[msg.sender].player == 0 || games[msg.sender].state != GameState.Ongoing) {
-			throw;
+			revert();
 		}
 		_;
 	}
@@ -88,22 +88,22 @@ contract BlackJack {
     	uint8 value
     );
 
-	function BlackJack() {
+	constructor() payable {
 
 	}
 
-	function () payable {
+	receive() external payable {
 
 	}
 
 	// starts a new game
 	function deal() public payable {
 		if (games[msg.sender].player != 0 && games[msg.sender].state == GameState.Ongoing) {
-			throw; // game is already going on
+			revert(); // game is already going on
 		}
 
 		if (msg.value < minBet || msg.value > maxBet) {
-			throw; // incorrect bet
+			revert(); // incorrect bet
 		}
 
 		uint8[] memory houseCards = new uint8[](1);
@@ -111,11 +111,11 @@ contract BlackJack {
 
 		// deal the cards
 		playerCards[0] = Deck.deal(msg.sender, 0);
-		Deal(true, playerCards[0]);
+		emit Deal(true, playerCards[0]);
 		houseCards[0] = Deck.deal(msg.sender, 1);
-		Deal(false, houseCards[0]);
+		emit Deal(false, houseCards[0]);
 		playerCards[1] = Deck.deal(msg.sender, 2);
-		Deal(true, playerCards[1]);
+		emit Deal(true, playerCards[1]);
 
 		games[msg.sender] = Game({
 			player: msg.sender,
@@ -134,7 +134,7 @@ contract BlackJack {
 		uint8 nextCard = games[msg.sender].cardsDealt;
 		games[msg.sender].playerCards.push(Deck.deal(msg.sender, nextCard));
 		games[msg.sender].cardsDealt = nextCard + 1;
-		Deal(true, games[msg.sender].playerCards[games[msg.sender].playerCards.length - 1]);
+		emit Deal(true, games[msg.sender].playerCards[games[msg.sender].playerCards.length - 1]);
 		checkGameResult(games[msg.sender], false);
 	}
 
@@ -149,7 +149,7 @@ contract BlackJack {
 			games[msg.sender].houseCards.push(newCard);
 			games[msg.sender].cardsDealt = nextCard + 1;
 			houseScoreBig += Deck.valueOf(newCard, true);
-			Deal(false, newCard);
+			emit Deal(false, newCard);
 		}
 
 		checkGameResult(games[msg.sender], true);
@@ -162,12 +162,12 @@ contract BlackJack {
 		// calculate player score
 		var (playerScore, playerScoreBig) = calculateScore(game.playerCards);
 
-		GameStatus(houseScore, houseScoreBig, playerScore, playerScoreBig);
+		emit GameStatus(houseScore, houseScoreBig, playerScore, playerScoreBig);
 
 		if (houseScoreBig == BLACKJACK || houseScore == BLACKJACK) {
 			if (playerScore == BLACKJACK || playerScoreBig == BLACKJACK) {
 				// TIE
-				if (!msg.sender.send(game.bet)) throw; // return bet to the player
+				if (!payable(msg.sender).send(game.bet)) revert(); // return bet to the player
 				games[msg.sender].state = GameState.Tie; // finish the game
 				return;
 			} else {
@@ -180,10 +180,10 @@ contract BlackJack {
 				// PLAYER WON
 				if (game.playerCards.length == 2 && (Deck.isTen(game.playerCards[0]) || Deck.isTen(game.playerCards[1]))) {
 					// Natural blackjack => return x2.5
-					if (!msg.sender.send((game.bet * 5) / 2)) throw; // send prize to the player
+					if (!payable(msg.sender).send((game.bet * 5) / 2)) revert(); // send prize to the player
 				} else {
 					// Usual blackjack => return x2
-					if (!msg.sender.send(game.bet * 2)) throw; // send prize to the player
+					if (!payable(msg.sender).send(game.bet * 2)) revert(); // send prize to the player
 				}
 				games[msg.sender].state = GameState.Player; // finish the game
 				return;
@@ -191,7 +191,7 @@ contract BlackJack {
 
 				if (playerScore > BLACKJACK) {
 					// BUST, HOUSE WON
-					Log(1);
+					emit Log(1);
 					games[msg.sender].state = GameState.House; // finish the game
 					return;
 				}
@@ -220,7 +220,7 @@ contract BlackJack {
 				if (houseScoreBig > BLACKJACK) {
 					if (houseScore > BLACKJACK) {
 						// PLAYER WON
-						if (!msg.sender.send(game.bet * 2)) throw; // send prize to the player
+						if (!payable(msg.sender).send(game.bet * 2)) revert(); // send prize to the player
 						games[msg.sender].state = GameState.Player;
 						return;
 					} else {
@@ -233,11 +233,11 @@ contract BlackJack {
                 
 				if (houseShortage == playerShortage) {
 					// TIE
-					if (!msg.sender.send(game.bet)) throw; // return bet to the player
+					if (!payable(msg.sender).send(game.bet)) revert(); // return bet to the player
 					games[msg.sender].state = GameState.Tie;
 				} else if (houseShortage > playerShortage) {
 					// PLAYER WON
-					if (!msg.sender.send(game.bet * 2)) throw; // send prize to the player
+					if (!payable(msg.sender).send(game.bet * 2)) revert(); // send prize to the player
 					games[msg.sender].state = GameState.Player;
 				} else {
 					games[msg.sender].state = GameState.House;
@@ -246,7 +246,7 @@ contract BlackJack {
 		}
 	}
 
-	function calculateScore(uint8[] cards) private constant returns (uint8, uint8) {
+	function calculateScore(uint8[] cards) private view returns (uint8, uint8) {
 		uint8 score = 0;
 		uint8 scoreBig = 0; // in case of Ace there could be 2 different scores
 		bool bigAceUsed = false;
@@ -265,14 +265,14 @@ contract BlackJack {
 
 	function getPlayerCard(uint8 id) public gameIsGoingOn constant returns(uint8) {
 		if (id < 0 || id > games[msg.sender].playerCards.length) {
-			throw;
+			revert();
 		}
 		return games[msg.sender].playerCards[id];
 	}
 
 	function getHouseCard(uint8 id) public gameIsGoingOn constant returns(uint8) {
 		if (id < 0 || id > games[msg.sender].houseCards.length) {
-			throw;
+			revert();
 		}
 		return games[msg.sender].houseCards[id];
 	}
@@ -285,9 +285,9 @@ contract BlackJack {
 		return games[msg.sender].houseCards.length;
 	}
 
-	function getGameState() public constant returns (uint8) {
+	function getGameState() public view returns (uint8) {
 		if (games[msg.sender].player == 0) {
-			throw; // game doesn't exist
+			revert(); // game doesn't exist
 		}
 
 		Game game = games[msg.sender];

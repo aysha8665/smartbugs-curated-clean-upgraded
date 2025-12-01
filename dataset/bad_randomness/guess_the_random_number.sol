@@ -4,15 +4,15 @@
  * =======================
  */
 
-pragma solidity ^0.4.21;
+pragma solidity ^0.8.0;
 
 contract GuessTheRandomNumberChallenge {
     uint8 answer;
 
-    function GuessTheRandomNumberChallenge() public payable {
+    constructor()  payable  {
         require(msg.value == 1 ether);
         
-        answer = uint8(keccak256(block.blockhash(block.number - 1), now));
+        answer = uint8(keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp)));
     }
 
     function isComplete() public view returns (bool) {
@@ -23,7 +23,7 @@ contract GuessTheRandomNumberChallenge {
         require(msg.value == 1 ether);
 
         if (n == answer) {
-            msg.sender.transfer(2 ether);
+            payable(msg.sender).transfer(2 ether);
         }
     }
 }

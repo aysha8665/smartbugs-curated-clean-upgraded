@@ -5,7 +5,7 @@
  * =======================
  */
 
- pragma solidity ^0.4.16;
+ pragma solidity ^0.8.0;
 
 contract Ethraffle_v4b {
     struct Contestant {
@@ -52,7 +52,7 @@ contract Ethraffle_v4b {
     uint[] gaps;
 
     // Initialization
-    function Ethraffle_v4b() public {
+    constructor() payable {
         feeAddress = msg.sender;
     }
 
@@ -63,7 +63,7 @@ contract Ethraffle_v4b {
 
     function buyTickets() payable public {
         if (paused) {
-            msg.sender.transfer(msg.value);
+            payable(msg.sender).transfer(msg.value);
             return;
         }
 
@@ -79,7 +79,7 @@ contract Ethraffle_v4b {
             }
 
             contestants[currTicket] = Contestant(msg.sender, raffleId);
-            TicketPurchase(raffleId, msg.sender, currTicket);
+            emit TicketPurchase(raffleId, msg.sender, currTicket);
             moneySent -= pricePerTicket;
         }
 
@@ -90,7 +90,7 @@ contract Ethraffle_v4b {
 
         // Send back leftover money
         if (moneySent > 0) {
-            msg.sender.transfer(moneySent);
+            payable(msg.sender).transfer(moneySent);
         }
     }
 
@@ -101,11 +101,11 @@ contract Ethraffle_v4b {
         address seed2 = contestants[uint(msg.sender) % totalTickets].addr;
         
         uint seed3 = block.difficulty;
-        bytes32 randHash = keccak256(seed1, seed2, seed3);
+        bytes32 randHash = keccak256(abi.encodePacked(seed1, seed2, seed3));
 
         uint winningNumber = uint(randHash) % totalTickets;
         address winningAddress = contestants[winningNumber].addr;
-        RaffleResult(raffleId, winningNumber, winningAddress, seed1, seed2, seed3, randHash);
+        emit RaffleResult(raffleId, winningNumber, winningAddress, seed1, seed2, seed3, randHash);
 
         // Start next raffle
         raffleId++;
@@ -118,8 +118,8 @@ contract Ethraffle_v4b {
         // 
 
         // Distribute prize and fee
-        winningAddress.transfer(prize);
-        feeAddress.transfer(fee);
+        payable(winningAddress).transfer(prize);
+        payable(feeAddress).transfer(fee);
     }
 
     // Get your money back before the raffle occurs
@@ -130,12 +130,12 @@ contract Ethraffle_v4b {
                 refund += pricePerTicket;
                 contestants[i] = Contestant(address(0), 0);
                 gaps.push(i);
-                TicketRefund(raffleId, msg.sender, i);
+                emit TicketRefund(raffleId, msg.sender, i);
             }
         }
 
         if (refund > 0) {
-            msg.sender.transfer(refund);
+            payable(msg.sender).transfer(refund);
         }
     }
 
@@ -146,12 +146,12 @@ contract Ethraffle_v4b {
 
             for (uint i = 0; i < totalTickets; i++) {
                 if (raffleId == contestants[i].raffleId) {
-                    TicketRefund(raffleId, contestants[i].addr, i);
-                    contestants[i].addr.transfer(pricePerTicket);
+                    emit TicketRefund(raffleId, contestants[i].addr, i);
+                    contestants[i].payable(addr).transfer(pricePerTicket);
                 }
             }
 
-            RaffleResult(raffleId, totalTickets, address(0), address(0), address(0), 0, 0);
+            emit RaffleResult(raffleId, totalTickets, address(0), address(0), address(0), 0, 0);
             raffleId++;
             nextTicket = 0;
             
@@ -168,7 +168,7 @@ contract Ethraffle_v4b {
 
     function kill() public {
         if (msg.sender == feeAddress) {
-            selfdestruct(feeAddress);
+            selfdestruct(payable(feeAddress));
         }
     }
 }

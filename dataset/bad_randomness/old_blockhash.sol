@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 //=======================
 //=======================
@@ -17,7 +17,7 @@ contract PredictTheBlockHashChallenge {
 
     mapping(address => guess) guesses;
 
-    constructor() public payable {
+    constructor() payable {
         require(msg.value == 1 ether);
     }
 
@@ -36,7 +36,7 @@ contract PredictTheBlockHashChallenge {
 
         guesses[msg.sender].block = 0;
         if (guesses[msg.sender].guess == answer) {
-            msg.sender.transfer(2 ether);
+            payable(msg.sender).transfer(2 ether);
         }
     }
 }

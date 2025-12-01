@@ -4,7 +4,7 @@
  * =======================
  */
 
-pragma solidity ^0.4.25;
+pragma solidity ^0.8.0;
 
 // Based on TheRun contract deployed at 0xcac337492149bDB66b088bf5914beDfBf78cCC18.
 contract RandomNumberGenerator {
