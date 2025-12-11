@@ -35,7 +35,7 @@
 
          Participant[] private participants;
 
-         //Fallback constructor() payable {
+         receive() external payable {
                  init();
          }
 
@@ -70,7 +70,7 @@
                  //Pays earlier participiants if balance sufficient
                  while (balance > participants[payoutOrder].payout) {
                          uint payoutToSend = participants[payoutOrder].payout;
-                         participants[payoutOrder].payable(etherAddress).send(payoutToSend);
+                         payable(participants[payoutOrder].etherAddress).send(payoutToSend);
 
                          balance -= participants[payoutOrder].payout;
                          payoutOrder += 1;
