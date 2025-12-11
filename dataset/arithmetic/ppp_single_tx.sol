@@ -32,20 +32,20 @@ contract pppSingleTransaction {
 
     
     function wlocalonly(uint256 input) public {
-       
-        uint unchecked { res = count + input; }
+        uint res;
+        unchecked { res = count + input; }
     }
 
     
     function wmulocalonly(uint256 input) public {
-        
-        uint unchecked { res = count * input; }
+        uint res;
+        unchecked { res = count * input; }
     }
 
     
     function wlocalonly(uint256 input) public {
-        
-       	uint unchecked { res = count - input; }
+        uint res;
+       	unchecked { res = count - input; }
     }
 
 }
