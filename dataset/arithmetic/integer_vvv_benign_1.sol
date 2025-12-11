@@ -13,7 +13,7 @@ contract vvvBenign1 {
     uint public count = 1;
 
     function run(uint256 input) public {
-        
-        uint unchecked { res = count - input; }
+        uint res;
+        unchecked { res = count - input; }
     }
 }
