@@ -12,7 +12,8 @@ pragma solidity ^0.8.0;
  */
 library SafeMath {
   function mul(uint256 a, uint256 b) internal view returns (uint256) {
-    uint256 unchecked { c = a * b; }
+    uint256 c;
+    unchecked { c = a * b; }
     require(a == 0 || c / a == b);
     return c;
   }
@@ -30,7 +31,8 @@ library SafeMath {
   }
 
   function add(uint256 a, uint256 b) internal view returns (uint256) {
-    uint256 unchecked { c = a + b; }
+    uint256 c;
+    unchecked { c = a + b; }
     require(c >= a);
     return c;
   }
@@ -299,7 +301,7 @@ contract BecToken is PausableToken {
       balances[msg.sender] = totalSupply;    // Give the creator all initial tokens
     }
 
-    function () {
+    receive() external payable {
         //if ether is sent to this address, send it back.
         revert();
     }
