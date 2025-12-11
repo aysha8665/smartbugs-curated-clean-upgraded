@@ -48,7 +48,7 @@ contract WalletEvents {
   // Multi-sig transaction going out of the wallet (record who signed for it last, the operation hash, how much, and to whom it's going).
   event MultiTransact(address owner, bytes32 operation, uint value, address to, bytes data, address created);
   // Confirmation still needed for a transaction.
-  event ConfirmationNeeded(bytes32 operation, address initiator, uint value, address to, bytes memory data);
+  event ConfirmationNeeded(bytes32 operation, address initiator, uint value, address to, bytes data);
 }
 
 contract WalletAbi {
@@ -136,7 +136,7 @@ contract WalletLibrary is WalletEvents {
     // make sure they're an owner
     if (ownerIndex == 0) return;
     uint ownerIndexBit = 2**ownerIndex;
-    var pending = m_pending[_operation];
+    PendingState pending = m_pending[_operation];
     if (pending.ownersDone & ownerIndexBit > 0) {
       pending.yetNeeded++;
       pending.ownersDone -= ownerIndexBit;
@@ -200,7 +200,7 @@ contract WalletLibrary is WalletEvents {
   }
 
   function hasConfirmed(bytes32 _operation, address _owner) external view returns (bool) {
-    var pending = m_pending[_operation];
+    PendingState pending = m_pending[_operation];
     uint ownerIndex = m_ownerIndex[uint(_owner)];
 
     // make sure they're an owner
@@ -302,7 +302,7 @@ contract WalletLibrary is WalletEvents {
     // make sure they're an owner
     if (ownerIndex == 0) return;
 
-    var pending = m_pending[_operation];
+    PendingState pending = m_pending[_operation];
     // if we're not yet working on this operation, switch over and reset the confirmation status.
     if (pending.yetNeeded == 0) {
       // reset count of confirmations needed.
@@ -427,9 +427,9 @@ contract Wallet is WalletEvents {
       mstore(0x0, sig)
       // Add the call data, which is at the end of the
       // code
-      codecopy(0x4,  sub(codesize, argsize), argsize)
+      codecopy(0x4,  sub(codesize(), argsize), argsize)
       // Delegate call to the library
-      delegatecall(sub(gas, 10000), target, 0x0, add(argsize, 0x4), 0x0, 0x0)
+      delegatecall(sub(gas(), 10000), target, 0x0, add(argsize, 0x4), 0x0, 0x0)
     }
   }
 
