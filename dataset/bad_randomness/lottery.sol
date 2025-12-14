@@ -26,7 +26,7 @@
      }
 
      // Fallback function returns ether
-     function() {
+     receive() external payable {
          revert();
      }
 
