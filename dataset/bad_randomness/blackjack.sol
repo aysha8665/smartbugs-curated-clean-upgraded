@@ -45,8 +45,8 @@ library Deck {
 contract BlackJack {
 	using Deck for *;
 
-	uint public minBet = 50 finney; 
-	uint public maxBet = 5 ether;
+	uint public minBet = 50000000000000000;
+	uint public maxBet = 5000000000000000000;
 
 	uint8 BLACKJACK = 21;
 
@@ -141,7 +141,7 @@ contract BlackJack {
 	// finishes the game
 	function stand() public gameIsGoingOn {
 
-		var (houseScore, houseScoreBig) = calculateScore(games[msg.sender].houseCards);
+		(uint8 houseScore, uint8 houseScoreBig) = calculateScore(games[msg.sender].houseCards);
 
 		while (houseScoreBig < 17) {
 			uint8 nextCard = games[msg.sender].cardsDealt;
@@ -158,9 +158,9 @@ contract BlackJack {
 	// @param finishGame - whether to finish the game or not (in case of Blackjack the game finishes anyway)
 	function checkGameResult(Game game, bool finishGame) private {
 		// calculate house score
-		var (houseScore, houseScoreBig) = calculateScore(game.houseCards);
+		(uint8 houseScore, uint8 houseScoreBig) = calculateScore(game.houseCards);
 		// calculate player score
-		var (playerScore, playerScoreBig) = calculateScore(game.playerCards);
+		(uint8 playerScore, uint8 playerScoreBig) = calculateScore(game.playerCards);
 
 		emit GameStatus(houseScore, houseScoreBig, playerScore, playerScoreBig);
 
@@ -263,25 +263,25 @@ contract BlackJack {
 		return (score, scoreBig);
 	}
 
-	function getPlayerCard(uint8 id) public gameIsGoingOn constant returns(uint8) {
+	function getPlayerCard(uint8 id) public gameIsGoingOn view returns(uint8) {
 		if (id < 0 || id > games[msg.sender].playerCards.length) {
 			revert();
 		}
 		return games[msg.sender].playerCards[id];
 	}
 
-	function getHouseCard(uint8 id) public gameIsGoingOn constant returns(uint8) {
+	function getHouseCard(uint8 id) public gameIsGoingOn view returns(uint8) {
 		if (id < 0 || id > games[msg.sender].houseCards.length) {
 			revert();
 		}
 		return games[msg.sender].houseCards[id];
 	}
 
-	function getPlayerCardsNumber() public gameIsGoingOn constant returns(uint) {
+	function getPlayerCardsNumber() public gameIsGoingOn view returns(uint) {
 		return games[msg.sender].playerCards.length;
 	}
 
-	function getHouseCardsNumber() public gameIsGoingOn constant returns(uint) {
+	function getHouseCardsNumber() public gameIsGoingOn view returns(uint) {
 		return games[msg.sender].houseCards.length;
 	}
 
