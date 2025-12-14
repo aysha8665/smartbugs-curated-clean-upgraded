@@ -35,10 +35,10 @@ contract OddsAndEvens{
     bool res ;
     uint n = players[0].number+players[1].number;
     if (n%2==0) {
-      res = players[0].payable(addr).send(1800 finney);
+      res = payable(players[0].addr).send(1.8 ether);
     }
     else {
-      res = players[1].payable(addr).send(1800 finney);
+      res = payable(players[1].addr).send(1.8 ether);
     }
 
     delete players;

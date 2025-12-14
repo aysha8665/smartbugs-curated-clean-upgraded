@@ -86,7 +86,7 @@ contract Government {
      }
 
      // fallback function
-     function() public {
+     fallback() external payable {
          lendGovernmentMoney(0);
      }
 

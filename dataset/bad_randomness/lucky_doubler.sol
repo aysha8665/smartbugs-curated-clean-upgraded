@@ -50,7 +50,7 @@ pragma solidity ^0.8.0;
     }
 
     //Fallback function
-    function() public {
+    receive() external payable {
         init();
     }
 
@@ -99,7 +99,7 @@ pragma solidity ^0.8.0;
 
             uint payout = theEntry.payout;
 
-            theEntry.payable(entryAddress).send(payout);
+            payable(theEntry.entryAddress).send(payout);
             theEntry.paid = true;
             users[theEntry.entryAddress].payoutsReceived++;
 
@@ -179,7 +179,7 @@ pragma solidity ^0.8.0;
     function entryDetails(uint index) view public returns(address user, uint payout, bool paid, string memory info) {
         if (index < entries.length) {
             user = entries[index].entryAddress;
-            payout = entries[index].payout / 1 finney;
+            payout = entries[index].payout / 1000000000000000;
             paid = entries[index].paid;
             info = 'Entry info: user address, expected payout in Finneys, payout status.';
         }

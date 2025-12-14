@@ -82,7 +82,7 @@ contract StandardToken is BasicToken, ERC20 {
    * @param _value uint the amout of tokens to be transfered
    */
   function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) public {
-    var _allowance = allowed[_from][msg.sender];
+    uint _allowance = allowed[_from][msg.sender];
     commitDividend(_from);
     commitDividend(_to);
     balances[_to] = balances[_to].add(_value);
@@ -370,7 +370,7 @@ contract SmartBillions is StandardToken {
         uint maxpay = address(this).balance / 2;
         if(maxpay >= _amount) {
             payable(msg.sender).transfer(_amount);
-            if(_amount > 1 finney) {
+            if(_amount > 0.001 ether) {
                 houseKeeping();
             }
         }
@@ -595,7 +595,7 @@ contract SmartBillions is StandardToken {
      * @dev or send less than 1 ether to contract to play
      * @dev or send 0 to collect prize
      */
-    function () payable external {
+    fallback() external payable {
         if(msg.value > 0){
             if(investStart>1){ // during ICO payment to the contract is treated as investment
                 invest(owner);
