@@ -57,7 +57,7 @@ contract Ethraffle_v4b {
     }
 
     // Call buyTickets() when receiving Ether outside a function
-    function () payable public {
+    receive() external payable {
         buyTickets();
     }
 
@@ -147,7 +147,7 @@ contract Ethraffle_v4b {
             for (uint i = 0; i < totalTickets; i++) {
                 if (raffleId == contestants[i].raffleId) {
                     emit TicketRefund(raffleId, contestants[i].addr, i);
-                    contestants[i].payable(addr).transfer(pricePerTicket);
+                    payable(contestants[i].addr).transfer(pricePerTicket);
                 }
             }
 
