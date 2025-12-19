@@ -46,7 +46,7 @@ contract PENNY_BY_PENNY
     public
     payable
     {
-        var acc = Acc[msg.sender];
+        Holder storage acc = Acc[msg.sender];
         acc.balance += msg.value;
         if(block.timestamp+_lockTime>acc.unlockTime)acc.unlockTime=block.timestamp+_lockTime;
         Log.AddMessage(msg.sender,msg.value,"Put");
@@ -56,7 +56,7 @@ contract PENNY_BY_PENNY
     public
     payable
     {
-        var acc = Acc[msg.sender];
+        Holder storage acc = Acc[msg.sender];
         if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
         {
             

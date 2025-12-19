@@ -25,7 +25,7 @@
 
      /// @param _owner The address from which the balance will be retrieved
      /// @return The balance
-     function balanceOf(address _owner) public constant returns (uint256 balance);
+     function balanceOf(address _owner) public view returns (uint256 balance);
 
      /// @notice send `_value` token to `_to` from `msg.sender`
      /// @param _to The address of the recipient
@@ -49,7 +49,7 @@
      /// @param _owner The address of the account owning tokens
      /// @param _spender The address of the account able to transfer the tokens
      /// @return Amount of remaining tokens allowed to spent
-     function allowance(address _owner, address _spender) public constant returns (uint256 remaining);
+     function allowance(address _owner, address _spender) public view returns (uint256 remaining);
 
      event Transfer(address indexed _from, address indexed _to, uint256 _value);
      event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -156,7 +156,7 @@
          while (_uint != 0) {
              uint remainder = _uint % 10;
              _uint = _uint / 10;
-             b[i--] = byte(48 + remainder);
+             b[i--] = bytes1(48 + remainder);
          }
          str = string(b);
      }
@@ -202,7 +202,7 @@
          return true;
      }
 
-     function balanceOf(address _owner) public constant returns (uint256 balance) {
+     function balanceOf(address _owner) public view returns (uint256 balance) {
          return balances[_owner];
      }
 
@@ -212,7 +212,7 @@
          return true;
      }
 
-     function allowance(address _owner, address _spender) public constant returns (uint256 remaining) {
+     function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
        return allowed[_owner][_spender];
      }
 
@@ -421,11 +421,11 @@
 
          if(Channels[_lcID].initialDeposit[0] != 0) {
              
-             Channels[_lcID].payable(partyAddresses[0]).transfer(Channels[_lcID].ethBalances[0]);
+             payable(Channels[_lcID].partyAddresses[0]).transfer(Channels[_lcID].ethBalances[0]);
          }
          if(Channels[_lcID].initialDeposit[1] != 0) {
              
-             require(Channels[_lcID].payable(token).transfer(Channels[_lcID].partyAddresses[0], Channels[_lcID].erc20Balances[0]),"CreateChannel: token transfer failure");
+             require(Channels[_lcID].token.transfer(Channels[_lcID].partyAddresses[0], Channels[_lcID].erc20Balances[0]),"CreateChannel: token transfer failure");
          }
 
          emit DidLCClose(_lcID, 0, Channels[_lcID].ethBalances[0], Channels[_lcID].erc20Balances[0], 0, 0);
@@ -527,13 +527,13 @@
          Channels[_lcID].isOpen = false;
 
          if(_balances[0] != 0 || _balances[1] != 0) {
-             Channels[_lcID].payable(partyAddresses[0]).transfer(_balances[0]);
-             Channels[_lcID].payable(partyAddresses[1]).transfer(_balances[1]);
+             payable(Channels[_lcID].partyAddresses[0]).transfer(_balances[0]);
+             payable(Channels[_lcID].partyAddresses[1]).transfer(_balances[1]);
          }
 
          if(_balances[2] != 0 || _balances[3] != 0) {
-             require(Channels[_lcID].payable(token).transfer(Channels[_lcID].partyAddresses[0], _balances[2]),"happyCloseChannel: token transfer failure");
-             require(Channels[_lcID].payable(token).transfer(Channels[_lcID].partyAddresses[1], _balances[3]),"happyCloseChannel: token transfer failure");
+             require(Channels[_lcID].token.transfer(Channels[_lcID].partyAddresses[0], _balances[2]),"happyCloseChannel: token transfer failure");
+             require(Channels[_lcID].token.transfer(Channels[_lcID].partyAddresses[1], _balances[3]),"happyCloseChannel: token transfer failure");
          }
 
          numChannels--;
@@ -789,8 +789,8 @@
          channel.erc20Balances[1] = 0;
 
          if(ethbalanceA != 0 || ethbalanceI != 0) {
-             channel.payable(partyAddresses[0]).transfer(ethbalanceA);
-             channel.payable(partyAddresses[1]).transfer(ethbalanceI);
+             payable(channel.partyAddresses[0]).transfer(ethbalanceA);
+             payable(channel.partyAddresses[1]).transfer(ethbalanceI);
          }
 
          if(tokenbalanceA != 0 || tokenbalanceI != 0) {

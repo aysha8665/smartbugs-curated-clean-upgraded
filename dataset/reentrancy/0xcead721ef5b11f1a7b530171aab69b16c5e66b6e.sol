@@ -12,7 +12,7 @@ contract WALLET
     public
     payable
     {
-        var acc = Acc[msg.sender];
+        Holder storage acc = Acc[msg.sender];
         acc.balance += msg.value;
         acc.unlockTime = _unlockTime>block.timestamp?_unlockTime:block.timestamp;
         LogFile.AddMessage(msg.sender,msg.value,"Put");
@@ -22,7 +22,7 @@ contract WALLET
     public
     payable
     {
-        var acc = Acc[msg.sender];
+        Holder storage acc = Acc[msg.sender];
         if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
         {
             
