@@ -98,5 +98,5 @@ contract TokenBank is Token
         }
     }
     
-    function Bal() public constant returns(uint){return address(this).balance;}
+    function Bal() public view returns(uint){return address(this).balance;}
 }

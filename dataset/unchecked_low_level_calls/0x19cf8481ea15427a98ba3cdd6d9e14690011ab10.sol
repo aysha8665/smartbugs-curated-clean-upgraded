@@ -56,19 +56,19 @@ contract SafeMath {
     return c;
   }
 
-  function max64(uint64 a, uint64 b) internal constant returns (uint64) {
+  function max64(uint64 a, uint64 b) internal pure returns (uint64) {
     return a >= b ? a : b;
   }
 
-  function min64(uint64 a, uint64 b) internal constant returns (uint64) {
+  function min64(uint64 a, uint64 b) internal pure returns (uint64) {
     return a < b ? a : b;
   }
 
-  function max256(uint256 a, uint256 b) internal constant returns (uint256) {
+  function max256(uint256 a, uint256 b) internal pure returns (uint256) {
     return a >= b ? a : b;
   }
 
-  function min256(uint256 a, uint256 b) internal constant returns (uint256) {
+  function min256(uint256 a, uint256 b) internal pure returns (uint256) {
     return a < b ? a : b;
   }
 
@@ -100,7 +100,7 @@ contract StandardToken is ERC20, SafeMath {
   mapping (address => mapping (address => uint)) allowed;
 
   /* Interface declaration */
-  function isToken() public constant returns (bool weAre) {
+  function isToken() public pure returns (bool weAre) {
     return true;
   }
 
@@ -189,7 +189,7 @@ contract daoPOLSKAtokens{
 mapping (address => uint256) balancesRAW;
   mapping (address => mapping (address => uint256)) allowed;
 
-	event UpdatedTokenInformation(string memory newName, string memory newSymbol);	
+	event UpdatedTokenInformation(string newName, string newSymbol);	
  
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 	event receivedEther(address indexed _from,uint256 _value);
@@ -323,12 +323,12 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
 
 
 	
-	    function () payable  public {
-		 if(funding){ 
-        emit receivedEther(msg.sender, msg.value);
-		balances[msg.sender]=balances[msg.sender]+msg.value;
-		} else revert();
-		
+	  receive() external payable {
+      if(funding){ 
+          emit receivedEther(msg.sender, msg.value);
+      balances[msg.sender]=balances[msg.sender]+msg.value;
+      } else revert();
+      
     }
    
 
@@ -363,15 +363,15 @@ function setChainsAddresses(address chainAd, int chainnumber) public {
 // if accidentally other token was donated to Project Dev
 
 
-	function sendTokenAw(address StandardTokenAddress, address receiver, uint amount){
+	function sendTokenAw(address StandardTokenAddress, address receiver, uint256 amount) public {
 		if (msg.sender != owner) {
 		revert();
 		}
-		sendTokenAway t = transfers[numTransfers];
+		sendTokenAway storage t = transfers[numTransfers];
 		t.coinContract = StandardToken(StandardTokenAddress);
 		t.amount = amount;
 		t.recipient = receiver;
-		t.payable(coinContract).transfer(receiver, amount);
+    t.coinContract.transfer(receiver, amount);
 		numTransfers++;
 	}
 
@@ -400,9 +400,9 @@ bool public migratestate= false;
 
 
 
-	 var numTokensRAW = msg.value;
+	 uint256 numTokensRAW = msg.value;
 
-        var numTokens = msg.value * CreationRate;
+        uint256 numTokens = msg.value * CreationRate;
         totalSupply += numTokens;
 
         // Assign new tokens to the sender
@@ -485,8 +485,8 @@ function refundTRA() external {
         if (funding) revert();
         if (!refundstate) revert();
 
-        var DAOPLTokenValue = balances[msg.sender];
-        var ETHValue = balancesRAW[msg.sender];
+        uint256 DAOPLTokenValue = balances[msg.sender];
+        uint256 ETHValue = balancesRAW[msg.sender];
         if (ETHValue == 0) revert();
         balancesRAW[msg.sender] = 0;
         totalSupply -= DAOPLTokenValue;

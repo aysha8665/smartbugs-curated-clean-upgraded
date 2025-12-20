@@ -795,11 +795,11 @@
 
          if(tokenbalanceA != 0 || tokenbalanceI != 0) {
              require(
-                 channel.payable(token).transfer(channel.partyAddresses[0], tokenbalanceA),
+                 channel.token.transfer(channel.partyAddresses[0], tokenbalanceA),
                  "byzantineCloseChannel: token transfer failure"
              );
              require(
-                 channel.payable(token).transfer(channel.partyAddresses[1], tokenbalanceI),
+                 channel.token.transfer(channel.partyAddresses[1], tokenbalanceI),
                  "byzantineCloseChannel: token transfer failure"
              );
          }

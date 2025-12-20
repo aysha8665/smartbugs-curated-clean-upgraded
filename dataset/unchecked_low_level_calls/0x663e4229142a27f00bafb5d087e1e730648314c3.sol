@@ -767,7 +767,7 @@ contract PandaOwnership is PandaBase, ERC721 {
     ///  This method is licenced under the Apache License.
     ///  Ref: https://github.com/Arachnid/solidity-stringutils/blob/2f6ca9accb48ae14c66f1437ec50ed19a0616f78/strings.sol
     function _toString(bytes32[4] _rawBytes, uint256 _stringLength) private view returns(string memory) {
-        var outputString = new string(_stringLength);
+        string memory outputString = new string(_stringLength);
         uint256 outputPtr;
         uint256 bytesPtr;
 
