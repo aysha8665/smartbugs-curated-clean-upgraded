@@ -39,7 +39,7 @@ contract Splitter{
 
 //puppet count
 
-	function getPuppetCount() public constant returns(uint256 puppetCount){
+	function getPuppetCount() public view returns(uint256 puppetCount){
     	return puppets.length;
   	}
 
@@ -77,10 +77,9 @@ contract Splitter{
         
 //fallback function
 
-function() payable public{
-	}
+receive() external payable {
 }
-
+}
 
 contract Puppet {
     

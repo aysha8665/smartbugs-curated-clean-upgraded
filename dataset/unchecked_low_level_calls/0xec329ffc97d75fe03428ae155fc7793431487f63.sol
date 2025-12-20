@@ -123,9 +123,9 @@ contract TokenSender is Owned {
         return transfers.length;
     }
 
-    function gas() internal constant returns (uint _gas) {
+    function gas() internal view returns (uint _gas) {
         assembly {
-            _gas:= gas
+            _gas:= gas()
         }
     }
 

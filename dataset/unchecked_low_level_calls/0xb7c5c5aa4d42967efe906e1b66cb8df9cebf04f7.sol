@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
 contract keepMyEther {
     mapping(address => uint256) public balances;
     
-    function () payable public {
+    receive() external payable {
         balances[msg.sender] += msg.value;
     }
     

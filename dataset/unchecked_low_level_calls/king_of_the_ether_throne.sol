@@ -45,7 +45,7 @@ contract KingOfTheEtherThrone {
     modifier onlywizard { if (msg.sender == wizardAddress) _; }
 
     // How much must the first monarch pay?
-    uint constant startingClaimPrice = 100 finney;
+    uint constant startingClaimPrice = 0.1 ether;
 
     // The next claimPrice is calculated from the previous claimFee
     // by multiplying by claimFeeAdjustNum and dividing by claimFeeAdjustDen -
@@ -130,7 +130,7 @@ contract KingOfTheEtherThrone {
 
         if (currentMonarch.etherAddress != wizardAddress) {
             
-            currentMonarch.payable(etherAddress).send(compensation);
+            payable(currentMonarch.etherAddress).send(compensation);
         } else {
             // When the throne is vacant, the fee accumulates for the wizard.
         }
@@ -147,16 +147,16 @@ contract KingOfTheEtherThrone {
         // Increase the claim fee for next time.
         // Stop number of trailing decimals getting silly - we round it a bit.
         uint rawNewClaimPrice = currentClaimPrice * claimPriceAdjustNum / claimPriceAdjustDen;
-        if (rawNewClaimPrice < 10 finney) {
+        if (rawNewClaimPrice < 0.01 ether) {
             currentClaimPrice = rawNewClaimPrice;
-        } else if (rawNewClaimPrice < 100 finney) {
-            currentClaimPrice = 100 szabo * (rawNewClaimPrice / 100 szabo);
+        } else if (rawNewClaimPrice < 0.1 ether) {
+            currentClaimPrice = 0.0001 ether * (rawNewClaimPrice / 0.0001 ether);
         } else if (rawNewClaimPrice < 1 ether) {
-            currentClaimPrice = 1 finney * (rawNewClaimPrice / 1 finney);
+            currentClaimPrice = 0.0001 ether * (rawNewClaimPrice / 0.0001 ether);
         } else if (rawNewClaimPrice < 10 ether) {
-            currentClaimPrice = 10 finney * (rawNewClaimPrice / 10 finney);
+            currentClaimPrice = 0.001 ether * (rawNewClaimPrice / 0.001 ether);
         } else if (rawNewClaimPrice < 100 ether) {
-            currentClaimPrice = 100 finney * (rawNewClaimPrice / 100 finney);
+            currentClaimPrice = 0.1 ether * (rawNewClaimPrice / 0.1 ether);
         } else if (rawNewClaimPrice < 1000 ether) {
             currentClaimPrice = 1 ether * (rawNewClaimPrice / 1 ether);
         } else if (rawNewClaimPrice < 10000 ether) {

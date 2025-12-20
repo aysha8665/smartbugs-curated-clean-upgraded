@@ -141,6 +141,6 @@ contract Marriage is Owned
 
 
     // Declare event structure
-    event MajorEvent(string memory name, string description, string memory url);
-    event MessageSent(string memory name, string description, string url, uint value);
+    event MajorEvent(string name, string description, string url);
+    event MessageSent(string name, string description, string url, uint value);
 }

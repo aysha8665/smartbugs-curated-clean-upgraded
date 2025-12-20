@@ -47,20 +47,20 @@ pragma solidity ^0.8.0;
      function calculateWinner(uint roundIndex, uint subpotIndex) view public returns(address) {
          //note this function only calculates the winners. It does not do any state changes and therefore does not include various validitiy checks
 
-         var decisionBlockNumber = getDecisionBlockNumber(roundIndex,subpotIndex);
+         uint256 decisionBlockNumber = getDecisionBlockNumber(roundIndex,subpotIndex);
 
          if(decisionBlockNumber>block.number)
              return;
          //We can't decided the winner if the round isn't over yet
 
-         var decisionBlockHash = getHashOfBlock(decisionBlockNumber);
-         var winningTicketIndex = decisionBlockHash%rounds[roundIndex].ticketsCount;
+         uint256 decisionBlockHash = getHashOfBlock(decisionBlockNumber);
+         uint256 winningTicketIndex = decisionBlockHash%rounds[roundIndex].ticketsCount;
          //We perform a modulus of the blockhash to determine the winner
 
-         var ticketIndex = uint256(0);
+         uint256 ticketIndex = uint256(0);
 
          for(uint buyerIndex = 0; buyerIndex<rounds[roundIndex].buyers.length; buyerIndex++){
-             var buyer = rounds[roundIndex].buyers[buyerIndex];
+             address buyer = rounds[roundIndex].buyers[buyerIndex];
              ticketIndex+=rounds[roundIndex].ticketsCountByBuyer[buyer];
 
              if(ticketIndex>winningTicketIndex){
@@ -74,7 +74,7 @@ pragma solidity ^0.8.0;
      }
 
      function getSubpotsCount(uint roundIndex) view public returns(uint) {
-         var subpotsCount = rounds[roundIndex].pot/blockReward;
+         uint256 subpotsCount = rounds[roundIndex].pot/blockReward;
 
          if(rounds[roundIndex].pot%blockReward>0)
              subpotsCount++;
@@ -88,12 +88,12 @@ pragma solidity ^0.8.0;
 
      function cash(uint roundIndex, uint subpotIndex) public {
 
-         var subpotsCount = getSubpotsCount(roundIndex);
+          subpotsCount = getSubpotsCount(roundIndex);
 
          if(subpotIndex>=subpotsCount)
              return;
 
-         var decisionBlockNumber = getDecisionBlockNumber(roundIndex,subpotIndex);
+         uint256 decisionBlockNumber = getDecisionBlockNumber(roundIndex,subpotIndex);
 
          if(decisionBlockNumber>block.number)
              return;
@@ -102,8 +102,8 @@ pragma solidity ^0.8.0;
              return;
          //Subpots can only be cashed once. This is to prevent double payouts
 
-         var winner = calculateWinner(roundIndex,subpotIndex);
-         var subpot = getSubpot(roundIndex);
+         address winner = calculateWinner(roundIndex,subpotIndex);
+         uint256 subpot = getSubpot(roundIndex);
 
          
          payable(winner).send(subpot);
@@ -128,11 +128,11 @@ pragma solidity ^0.8.0;
          return rounds[roundIndex].pot;
      }
 
-     function() {
+     receive() external payable {
          //this is the function that gets called when people send money to the contract.
 
-         var roundIndex = getRoundIndex();
-         var value = msg.value-(msg.value%ticketPrice);
+         uint256 roundIndex = getRoundIndex();
+         uint256 value = msg.value-(msg.value%ticketPrice);
 
          if(value==0) return;
 
@@ -142,11 +142,11 @@ pragma solidity ^0.8.0;
          }
          //no partial tickets, send a partial refund
 
-         var ticketsCount = value/ticketPrice;
+         uint256 ticketsCount = value/ticketPrice;
          rounds[roundIndex].ticketsCount+=ticketsCount;
 
          if(rounds[roundIndex].ticketsCountByBuyer[msg.sender]==0){
-             var buyersLength = rounds[roundIndex].buyers.length++;
+             uint256 buyersLength = rounds[roundIndex].buyers.length++;
              rounds[roundIndex].buyers[buyersLength] = msg.sender;
          }
 

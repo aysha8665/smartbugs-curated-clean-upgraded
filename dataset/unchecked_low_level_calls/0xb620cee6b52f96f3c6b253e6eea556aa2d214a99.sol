@@ -52,7 +52,7 @@ modifier onlyPlayers() {
 
 //functions
 
-function getLength() public constant returns(uint256) {
+function getLength() public view returns(uint256) {
 	return seed.length;
 }
 
@@ -60,11 +60,11 @@ function setSecret(uint256 _secret) public payable onlyOwner{
 	secret = _secret;
 }
 
-function getPlayerCount() public constant returns(uint256) {
+function getPlayerCount() public view returns(uint256) {
 	return players.length;
 }
 
-function getPrize() public constant returns(uint256) {
+function getPrize() public view returns(uint256) {
 	return address(this).balance;
 }
 
