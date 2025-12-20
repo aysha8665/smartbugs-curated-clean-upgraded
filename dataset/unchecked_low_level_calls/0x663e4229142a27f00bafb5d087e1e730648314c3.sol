@@ -802,7 +802,7 @@ contract PandaBreeding is PandaOwnership {
     /// @notice The minimum payment required to use breedWithAuto(). This fee goes towards
     ///  the gas cost paid by whatever calls giveBirth(), and can be dynamically updated by
     ///  the COO role as the gas price changes.
-    uint256 public autoBirthFee = 2 finney;
+    uint256 public autoBirthFee = 0.002 ether;
 
     // Keeps track of number of pregnant pandas.
     uint256 public pregnantPandas;
@@ -1695,7 +1695,7 @@ contract SaleClockAuction is ClockAuction {
     // Tracks last 5 sale price of gen0 panda sales
     uint256 public gen0SaleCount;
     uint256[5] public lastGen0SalePrices;
-    uint256 public constant SurpriseValue = 10 finney;
+    uint256 public constant SurpriseValue = 0.01 ether;
 
     uint256[] CommonPanda;
     uint256[] RarePanda;
@@ -2213,9 +2213,9 @@ contract PandaMinting is PandaAuction {
 
 
     // Constants for gen0 auctions.
-    uint256 public constant GEN0_STARTING_PRICE = 100 finney;
+    uint256 public constant GEN0_STARTING_PRICE = 0.1 ether;
     uint256 public constant GEN0_AUCTION_DURATION = 1 days;
-    uint256 public constant OPEN_PACKAGE_PRICE = 10 finney;
+    uint256 public constant OPEN_PACKAGE_PRICE = 0.01 ether;
 
 
     // Counts the number of cats the contract owner has created.

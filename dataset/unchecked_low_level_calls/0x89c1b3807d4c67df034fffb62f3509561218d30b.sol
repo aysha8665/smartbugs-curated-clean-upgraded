@@ -46,7 +46,7 @@ contract TownCrier {
     // an exception, sending back the Ether (this was different before Solidity
     // v0.4.0). So if you want your contract to receive Ether, you have to
     // implement a fallback function.
-    function () {}
+    receive() external payable {}
 
     constructor() payable {
         // Start request IDs at 1 for two reasons:
