@@ -116,7 +116,7 @@ pragma solidity ^0.8.0;
          return uint(block.blockhash(blockIndex));
      }
 
-     function getBuyers(uint roundIndex,address buyer) view public returns(address[]) {
+     function getBuyers(uint roundIndex,address buyer) view public returns(address[] memory) {
          return rounds[roundIndex].buyers;
      }
 

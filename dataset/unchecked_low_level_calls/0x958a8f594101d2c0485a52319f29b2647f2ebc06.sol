@@ -104,8 +104,8 @@ contract Marriage is Owned
 
     // Create initial marriage contract
     function createMarriage(string memory _partner1,
-        string _partner2,
-        string _vows, string memory url) onlyOwner
+        string memory _partner2,
+        string memory _vows, string memory url) onlyOwner
     public {
         require(majorEvents.length == 0);
         partner1 = _partner1;
@@ -125,13 +125,13 @@ contract Marriage is Owned
     }
 
     // Set the IPFS hash of the image of the couple
-    function setMajorEvent(string memory name, string description, string memory url) onlyOwner areMarried
+    function setMajorEvent(string memory name, string memory description, string memory url) onlyOwner areMarried
     public {
         majorEvents.push(Event(block.timestamp, name, description, url));
         emit MajorEvent(name, description, url);
     }
 
-    function sendMessage(string memory nameFrom, string text, string memory url) payable areMarried public {
+    function sendMessage(string memory nameFrom, string memory text, string memory url) payable areMarried public {
         if (msg.value > 0) {
             payable(owner).transfer(address(this).balance);
         }

@@ -5,9 +5,9 @@
  */
 
 pragma solidity ^0.8.0;
-contract Token {
-    function transfer(address _to, uint _value) public returns (bool success);
-    function balanceOf(address _owner) view public returns (uint balance);
+abstract contract Token {
+    function transfer(address _to, uint _value) public virtual returns (bool success);
+    function balanceOf(address _owner) view public virtual returns (uint balance);
 }
 contract EtherGet {
     address owner;

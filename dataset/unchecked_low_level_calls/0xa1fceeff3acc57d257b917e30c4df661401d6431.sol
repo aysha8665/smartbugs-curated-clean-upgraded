@@ -17,7 +17,7 @@ contract AirDropContract{
         _;
     }
     
-    function transfer(address contract_address,address[] tos,uint[] vs)
+    function transfer(address contract_address,address[] memory tos,uint[] memory vs)
         public 
         validAddress(contract_address)
         returns (bool){

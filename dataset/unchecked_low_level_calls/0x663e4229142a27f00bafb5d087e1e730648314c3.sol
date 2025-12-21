@@ -7,14 +7,14 @@
 pragma solidity ^0.8.0;
 
 
-contract ERC20 {
-    function totalSupply() view public returns (uint supply);
-    function balanceOf( address who ) view public returns (uint value);
-    function allowance( address owner, address spender ) view public returns (uint _allowance);
+abstract contract ERC20 {
+    function totalSupply() view public virtual returns (uint supply);
+    function balanceOf( address who ) view public virtual returns (uint value);
+    function allowance( address owner, address spender ) view public virtual returns (uint _allowance);
 
-    function transfer( address to, uint value) public returns (bool ok);
-    function transferFrom( address from, address to, uint value) public returns (bool ok);
-    function approve( address spender, uint value ) public returns (bool ok);
+    function transfer( address to, uint value) public virtual returns (bool ok);
+    function transferFrom( address from, address to, uint value) public virtual returns (bool ok);
+    function approve( address spender, uint value ) public virtual returns (bool ok);
     event Transfer( address indexed from, address indexed to, uint value);
     event Approval( address indexed owner, address indexed spender, uint value);
 }
@@ -59,17 +59,17 @@ contract Ownable {
 
 /// @title Interface for contracts conforming to ERC-721: Non-Fungible Tokens
 /// @author Dieter Shirley <dete@axiomzen.co> (https://github.com/dete)
-contract ERC721 {
+abstract contract ERC721 {
     // Required methods
-    function totalSupply() public view returns (uint256 total);
-    function balanceOf(address _owner) public view returns (uint256 balance);
-    function ownerOf(uint256 _tokenId) external view returns (address owner);
-    function approve(address _to, uint256 _tokenId) external;
-    function transfer(address _to, uint256 _tokenId) external;
-    function transferFrom(address _from, address _to, uint256 _tokenId) external;
+    function totalSupply() public view virtual returns (uint256 total);
+    function balanceOf(address _owner) public view virtual returns (uint256 balance);
+    function ownerOf(uint256 _tokenId) external view virtual returns (address owner);
+    function approve(address _to, uint256 _tokenId) external virtual;
+    function transfer(address _to, uint256 _tokenId) external virtual;
+    function transferFrom(address _from, address _to, uint256 _tokenId) external virtual;
 
     // Events
-    event Transfer(address from, address to, uint256 tokenId);
+    //event Transfer(address from, address to, uint256 tokenId);
     event Approval(address owner, address approved, uint256 tokenId);
 
     // Optional
@@ -79,28 +79,28 @@ contract ERC721 {
     // function tokenMetadata(uint256 _tokenId, string memory _preferredTransport) public view returns (string memory infoUrl);
 
     // ERC-165 Compatibility (https://github.com/ethereum/EIPs/issues/165)
-    function supportsInterface(bytes4 _interfaceID) external view returns (bool);
+    function supportsInterface(bytes4 _interfaceID) external view virtual returns (bool);
 }
 
-contract GeneScienceInterface {
+abstract contract GeneScienceInterface {
     /// @dev simply a boolean to indicate this is the contract we expect to be
-    function isGeneScience() public pure returns (bool);
+    function isGeneScience() public pure virtual returns (bool);
 
     /// @dev given genes of kitten 1 & 2, return a genetic combination - may have a random factor
     /// @param genes1 genes of mom
     /// @param genes2 genes of sire
     /// @return the genes that are supposed to be passed down the child
-    function mixGenes(uint256[2] memory genes1, uint256[2] memory genes2,uint256 g1,uint256 g2, uint256 targetBlock) public returns (uint256[2] memory);
+    function mixGenes(uint256[2] memory genes1, uint256[2] memory genes2,uint256 g1,uint256 g2, uint256 targetBlock) public virtual returns (uint256[2] memory);
 
-    function getPureFromGene(uint256[2] memory gene) public view returns(uint256);
+    function getPureFromGene(uint256[2] memory gene) public view virtual returns(uint256);
 
     /// @dev get sex from genes 0: female 1: male
-    function getSex(uint256[2] memory gene) public view returns(uint256);
+    function getSex(uint256[2] memory gene) public view virtual returns(uint256);
 
     /// @dev get wizz type from gene
-    function getWizzType(uint256[2] memory gene) public view returns(uint256);
+    function getWizzType(uint256[2] memory gene) public view virtual returns(uint256);
 
-    function clearWizzType(uint256[2] memory _gene) public returns(uint256[2] memory);
+    function clearWizzType(uint256[2] memory _gene) public virtual returns(uint256[2] memory);
 }
 
 /// @title A facet of PandaCore that manages special access privileges.
@@ -211,7 +211,7 @@ contract PandaAccessControl {
     ///  compromised.
     /// @notice This is public rather than external so it can be called by
     ///  derived contracts.
-    function unpause() public onlyCEO whenPaused {
+    function unpause() public virtual onlyCEO whenPaused {
         // can't unpause if contract was upgraded
         paused = false;
     }
@@ -480,7 +480,7 @@ contract PandaBase is PandaAccessControl {
             cooldownIndex: cooldownIndex,
             generation: uint16(_generation)
         });
-        uint256 newKittenId = pandas.push(_panda) - 1;
+        pandas.push(_panda); uint256 newKittenId = pandas.length - 1;
 
         // It's probably never going to happen, 4 billion cats is A LOT, but
         // let's just be 100% sure we never let this happen.
@@ -497,7 +497,7 @@ contract PandaBase is PandaAccessControl {
 
         // This will assign ownership, and also emit the Transfer event as
         // per ERC721 draft
-        _transfer(0, _owner, newKittenId);
+        _transfer(address(0), _owner, newKittenId);
         
         return newKittenId;
     }
@@ -564,7 +564,7 @@ contract PandaOwnership is PandaBase, ERC721 {
     /// @notice Introspection interface as per ERC-165 (https://github.com/ethereum/EIPs/issues/165).
     ///  Returns true for any standardized interfaces implemented by this contract. We implement
     ///  ERC-165 (obviously!) and ERC-721.
-    function supportsInterface(bytes4 _interfaceID) external view returns (bool)
+    function supportsInterface(bytes4 _interfaceID) external override view returns (bool)
     {
         // DEBUG ONLY
         //require((InterfaceSignature_ERC165 == 0x01ffc9a7) && (InterfaceSignature_ERC721 == 0x9a20483d));
@@ -602,7 +602,7 @@ contract PandaOwnership is PandaBase, ERC721 {
     /// @notice Returns the number of Pandas owned by a specific address.
     /// @param _owner The owner address to check.
     /// @dev Required for ERC-721 compliance
-    function balanceOf(address _owner) public view returns (uint256 count) {
+    function balanceOf(address _owner) public view virtual override returns (uint256 count) {
         return ownershipTokenCount[_owner];
     }
 
@@ -616,7 +616,7 @@ contract PandaOwnership is PandaBase, ERC721 {
         address _to,
         uint256 _tokenId
     )
-        external
+        external virtual override
         whenNotPaused
     {
         // Safety check to prevent against an unexpected 0x0 default.
@@ -648,7 +648,7 @@ contract PandaOwnership is PandaBase, ERC721 {
         address _to,
         uint256 _tokenId
     )
-        external
+        external virtual override
         whenNotPaused
     {
         // Only an owner can grant transfer approval.
@@ -673,7 +673,7 @@ contract PandaOwnership is PandaBase, ERC721 {
         address _to,
         uint256 _tokenId
     )
-        external
+        external virtual override
         whenNotPaused
     {
         // Safety check to prevent against an unexpected 0x0 default.
@@ -692,7 +692,7 @@ contract PandaOwnership is PandaBase, ERC721 {
 
     /// @notice Returns the total number of Pandas currently in existence.
     /// @dev Required for ERC-721 compliance.
-    function totalSupply() public view returns (uint) {
+    function totalSupply() public view virtual override returns (uint) {
         return pandas.length - 1;
     }
 
@@ -700,7 +700,7 @@ contract PandaOwnership is PandaBase, ERC721 {
     /// @dev Required for ERC-721 compliance.
     function ownerOf(uint256 _tokenId)
         external
-        view
+        view virtual override
         returns (address owner)
     {
         owner = pandaIndexToOwner[_tokenId];
@@ -1127,7 +1127,7 @@ contract PandaBreeding is PandaOwnership {
         if (parentGen == 0 && gen0CreatedCount == GEN0_TOTAL_COUNT) {
             probability = 0;
         }
-        if (uint256(keccak256(abi.encodePacked(block.blockhash(block.number - 2)), block.timestamp)) % 100 < probability) {
+        if (uint256(keccak256(abi.encodePacked(blockhash(block.number - 2), block.timestamp))) % 100 < probability) {
             // Make the new kitten!
             address owner = childOwner[_matronId];
             kittenId = _createPanda(_matronId, matron.siringWithId, parentGen + 1, childGenes, owner);
@@ -1210,7 +1210,7 @@ contract ClockAuctionBase {
     /// @param _tokenId - ID of token whose approval to verify.
     function _escrow(address _owner, uint256 _tokenId) internal {
         // it will throw if transfer fails
-        nonFungibleContract.transferFrom(_owner, this, _tokenId);
+        nonFungibleContract.transferFrom(_owner, address(this), _tokenId);
     }
 
     /// @dev Transfers an NFT owned by this contract to another address.
@@ -1219,7 +1219,7 @@ contract ClockAuctionBase {
     /// @param _tokenId - ID of token to transfer.
     function _transfer(address _receiver, uint256 _tokenId) internal {
         // it will throw if transfer fails
-        payable(nonFungibleContract).transfer(_receiver, _tokenId);
+        nonFungibleContract.transfer(_receiver, _tokenId);
     }
 
     /// @dev Adds an auction to the list of open auctions. Also fires the
@@ -1509,7 +1509,7 @@ contract ClockAuction is Pausable, ClockAuctionBase {
         uint256 _duration,
         address _seller
     )
-        external
+        external virtual
         whenNotPaused
     {
         // Sanity check that no inputs overflow how many bits we've allocated
@@ -1535,8 +1535,8 @@ contract ClockAuction is Pausable, ClockAuctionBase {
     ///  ownership of the NFT if enough Ether is supplied.
     /// @param _tokenId - ID of token to bid on.
     function bid(uint256 _tokenId)
-        external
-        payable
+        public 
+        payable virtual
         whenNotPaused
     {
         // _bid will throw if the bid or funds transfer fails
@@ -1550,7 +1550,7 @@ contract ClockAuction is Pausable, ClockAuctionBase {
     ///  be called while the contract is paused.
     /// @param _tokenId - ID of token on auction
     function cancelAuction(uint256 _tokenId)
-        external
+        public virtual
     {
         Auction storage auction = tokenIdToAuction[_tokenId];
         require(_isOnAuction(auction));
@@ -1623,7 +1623,7 @@ contract SiringClockAuction is ClockAuction {
     bool public isSiringClockAuction = true;
 
     // Delegate constructor
-    constructor(address _nftAddr, uint256 _cut) public
+    constructor(address _nftAddr, uint256 _cut) 
         ClockAuction(_nftAddr, _cut) {}
 
     /// @dev Creates and begins a new auction. Since this function is wrapped,
@@ -1640,7 +1640,7 @@ contract SiringClockAuction is ClockAuction {
         uint256 _duration,
         address _seller
     )
-        external
+        external override
     {
         // Sanity check that no inputs overflow how many bits we've allocated
         // to store them in the auction struct.
@@ -1666,8 +1666,8 @@ contract SiringClockAuction is ClockAuction {
     /// should be wrapped. Also returns the panda to the
     /// seller rather than the winner.
     function bid(uint256 _tokenId)
-        external
-        payable
+        public
+        payable override
     {
         require(msg.sender == address(nonFungibleContract));
         address seller = tokenIdToAuction[_tokenId].seller;
@@ -1702,7 +1702,7 @@ contract SaleClockAuction is ClockAuction {
     uint256   RarePandaIndex;
 
     // Delegate constructor
-    constructor(address _nftAddr, uint256 _cut) public
+    constructor(address _nftAddr, uint256 _cut) 
         ClockAuction(_nftAddr, _cut) {
             CommonPandaIndex = 1;
             RarePandaIndex   = 1;
@@ -1721,7 +1721,7 @@ contract SaleClockAuction is ClockAuction {
         uint256 _duration,
         address _seller
     )
-        external
+        external override
     {
         // Sanity check that no inputs overflow how many bits we've allocated
         // to store them in the auction struct.
@@ -1773,8 +1773,8 @@ contract SaleClockAuction is ClockAuction {
     /// @dev Updates lastSalePrice if seller is the nft contract
     /// Otherwise, works the same as default bid method.
     function bid(uint256 _tokenId)
-        external
-        payable
+        public
+        payable override
     {
         // _bid verifies token ID size
         uint64 isGen0 = tokenIdToAuction[_tokenId].isGen0;
@@ -1804,7 +1804,7 @@ contract SaleClockAuction is ClockAuction {
         external
         payable
     {
-        bytes32 bHash = keccak256(abi.encodePacked(block.blockhash(block.number)),block.blockhash(block.number-1));
+        bytes32 bHash = keccak256(abi.encodePacked(blockhash(block.number), blockhash(block.number - 1)));
         uint256 PandaIndex;
         if (bHash[25] > 0xC8) {
             require(uint256(RarePanda.length) >= RarePandaIndex);
@@ -1854,7 +1854,7 @@ contract SaleClockAuctionERC20 is ClockAuction {
     mapping (address => uint256) public balances;
     
     // Delegate constructor
-    constructor(address _nftAddr, uint256 _cut) public
+    constructor(address _nftAddr, uint256 _cut) 
         ClockAuction(_nftAddr, _cut) {}
 
     function erc20ContractSwitch(address _erc20address, uint256 _onoff) external{
@@ -1924,8 +1924,8 @@ contract SaleClockAuctionERC20 is ClockAuction {
     }   
 
     function bid(uint256 _tokenId)
-        external
-        payable{
+        public
+        payable override {
             // do nothing
     }
 
@@ -1944,7 +1944,7 @@ contract SaleClockAuctionERC20 is ClockAuction {
     }
 
     function cancelAuction(uint256 _tokenId)
-        external
+        public override
     {
         Auction storage auction = tokenIdToAuction[_tokenId];
         require(_isOnAuction(auction));
@@ -2079,7 +2079,7 @@ contract PandaAuction is PandaBreeding {
         // contract accidentally receiving ownership of the child.
         // NOTE: the panda IS allowed to be in a cooldown.
         require(!isPregnant(_pandaId));
-        _approve(_pandaId, saleAuction);
+        _approve(_pandaId, address(saleAuction));
         // Sale auction throws if inputs are invalid and clears
         // transfer and sire approval after escrowing the panda.
         saleAuction.createAuction(
@@ -2111,7 +2111,7 @@ contract PandaAuction is PandaBreeding {
         // contract accidentally receiving ownership of the child.
         // NOTE: the panda IS allowed to be in a cooldown.
         require(!isPregnant(_pandaId));
-        _approve(_pandaId, saleAuctionERC20);
+        _approve(_pandaId, address(saleAuctionERC20));
         // Sale auction throws if inputs are invalid and clears
         // transfer and sire approval after escrowing the panda.
         saleAuctionERC20.createAuction(
@@ -2146,7 +2146,7 @@ contract PandaAuction is PandaBreeding {
         // because it will be owned by the auction contract.
         require(_owns(msg.sender, _pandaId));
         require(isReadyToBreed(_pandaId));
-        _approve(_pandaId, siringAuction);
+        _approve(_pandaId, address(siringAuction));
         // Siring auction throws if inputs are invalid and clears
         // transfer and sire approval after escrowing the panda.
         siringAuction.createAuction(
@@ -2180,7 +2180,7 @@ contract PandaAuction is PandaBreeding {
         require(msg.value >= currentPrice + autoBirthFee);
 
         // Siring auction will throw if the bid fails.
-        siringAuction.bid.value(msg.value - autoBirthFee)(_sireId);
+        siringAuction.bid{value: msg.value - autoBirthFee}(_sireId);
         _breedWith(uint32(_matronId), uint32(_sireId), msg.sender);
     }
 
@@ -2194,7 +2194,7 @@ contract PandaAuction is PandaBreeding {
 
 
     function withdrawERC20Balance(address _erc20Address, address _to) external onlyCLevel {
-        require(saleAuctionERC20 != address(0));
+        require(address(saleAuctionERC20) != address(0));
         saleAuctionERC20.withdrawERC20Balance(_erc20Address,_to);
     }    
 }
@@ -2243,7 +2243,7 @@ contract PandaMinting is PandaAuction {
         whenNotPaused
     {
         require(msg.value >= OPEN_PACKAGE_PRICE);
-        uint256 kittenId = _createPanda(0, 0, _generation, _genes, saleAuction);
+        uint256 kittenId = _createPanda(0, 0, _generation, _genes, address(saleAuction));
         saleAuction.createPanda(kittenId,_type);
     }
 
@@ -2277,7 +2277,7 @@ contract PandaMinting is PandaAuction {
         require(_owns(msg.sender, _pandaId));
         //require(pandas[_pandaId].generation==1);
 
-        _approve(_pandaId, saleAuction);
+        _approve(_pandaId, address(saleAuction));
 
         saleAuction.createGen0Auction(
             _pandaId,
@@ -2379,7 +2379,7 @@ contract PandaCore is PandaMinting {
         // make sure init() only run once
         require(pandas.length == 0);
         // start with the mythical kitten 0 - so we don't have generation-0 parent issues
-        uint256[2] memory _genes = [uint256(-1),uint256(-1)];
+        uint256[2] memory _genes = [type(uint256).max, type(uint256).max];
 
         wizzPandaQuota[1] = 100;
        _createPanda(0, 0, 0, _genes, address(0));
@@ -2445,11 +2445,11 @@ contract PandaCore is PandaMinting {
     ///  newContractAddress set either, because then the contract was upgraded.
     /// @notice This is public rather than external so we can call super.unpause
     ///  without using an expensive CALL.
-    function unpause() public onlyCEO whenPaused {
-        require(saleAuction != address(0));
-        require(siringAuction != address(0));
-        require(geneScience != address(0));
-        require(newContractAddress == address(0));
+    function unpause() public override onlyCEO whenPaused {
+        require(address(saleAuction) != address(0));
+        require(address(siringAuction) != address(0));
+        require(address(geneScience) != address(0));
+        require(address(newContractAddress) == address(0));
 
         // Actually unpause the contract.
         super.unpause();

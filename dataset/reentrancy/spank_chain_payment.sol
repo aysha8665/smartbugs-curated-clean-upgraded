@@ -10,7 +10,7 @@
  // produced by the Solididy File Flattener (c) David Appleton 2018
  // contact : dave@akomba.com
  // released under Apache 2.0 licence
- contract Token {
+ abstract contract Token {
      /* This is a slight change to the ERC20 base standard.
      function totalSupply() view returns (uint256 supply);
      is replaced with:
@@ -24,32 +24,32 @@
      uint256 public totalSupply;
 
      /// @param _owner The address from which the balance will be retrieved
-     /// @return The balance
-     function balanceOf(address _owner) public view returns (uint256 balance);
+     /// @return balance The balance
+     function balanceOf(address _owner) public view virtual returns (uint256 balance);
 
      /// @notice send `_value` token to `_to` from `msg.sender`
      /// @param _to The address of the recipient
      /// @param _value The amount of token to be transferred
-     /// @return Whether the transfer was successful or not
-     function transfer(address _to, uint256 _value) public returns (bool success);
+     /// @return success Whether the transfer was successful or not
+     function transfer(address _to, uint256 _value) public virtual returns (bool success);
 
      /// @notice send `_value` token to `_to` from `_from` on the condition it is approved by `_from`
      /// @param _from The address of the sender
      /// @param _to The address of the recipient
      /// @param _value The amount of token to be transferred
-     /// @return Whether the transfer was successful or not
-     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
+     /// @return success Whether the transfer was successful or not
+     function transferFrom(address _from, address _to, uint256 _value) public virtual returns (bool success);
 
      /// @notice `msg.sender` approves `_spender` to spend `_value` tokens
      /// @param _spender The address of the account able to transfer the tokens
      /// @param _value The amount of tokens to be approved for transfer
-     /// @return Whether the approval was successful or not
-     function approve(address _spender, uint256 _value) public returns (bool success);
+     /// @return success Whether the approval was successful or not
+     function approve(address _spender, uint256 _value) public virtual returns (bool success);
 
      /// @param _owner The address of the account owning tokens
      /// @param _spender The address of the account able to transfer the tokens
-     /// @return Amount of remaining tokens allowed to spent
-     function allowance(address _owner, address _spender) public view returns (uint256 remaining);
+     /// @return remaining Amount of remaining tokens allowed to spent
+     function allowance(address _owner, address _spender) public view virtual returns (uint256 remaining);
 
      event Transfer(address indexed _from, address indexed _to, uint256 _value);
      event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -116,12 +116,12 @@
      function parseInt16Char(string memory _char) public pure returns (uint) {
          bytes memory bresult = bytes(_char);
          // bool decimals = false;
-         if ((bresult[0] >= 48) && (bresult[0] <= 57)) {
-             return uint(bresult[0]) - 48;
-         } else if ((bresult[0] >= 65) && (bresult[0] <= 70)) {
-             return uint(bresult[0]) - 55;
-         } else if ((bresult[0] >= 97) && (bresult[0] <= 102)) {
-             return uint(bresult[0]) - 87;
+         if ((uint8(bresult[0]) >= 48) && (uint8(bresult[0]) <= 57)) {
+             return uint8(bresult[0]) - 48;
+         } else if ((uint8(bresult[0]) >= 65) && (uint8(bresult[0]) <= 70)) {
+             return uint8(bresult[0]) - 55;
+         } else if ((uint8(bresult[0]) >= 97) && (uint8(bresult[0]) <= 102)) {
+             return uint8(bresult[0]) - 87;
          } else {
              revert();
          }
@@ -156,7 +156,7 @@
          while (_uint != 0) {
              uint remainder = _uint % 10;
              _uint = _uint / 10;
-             b[i--] = bytes1(48 + remainder);
+             b[i--] = bytes1(uint8(48 + remainder));
          }
          str = string(b);
      }
@@ -179,7 +179,7 @@
  }
  contract StandardToken is Token {
 
-     function transfer(address _to, uint256 _value) public returns (bool success) {
+     function transfer(address _to, uint256 _value) public virtual override returns (bool success) {
          //Default assumes totalSupply can't be over max (2^256 - 1).
          //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
          //Replace the if with this one instead.
@@ -191,7 +191,7 @@
          return true;
      }
 
-     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+     function transferFrom(address _from, address _to, uint256 _value) public virtual override returns (bool success) {
          //same as above. Replace this line with the following if you want to protect against wrapping uints.
          //require(balances[_from] >= _value && allowed[_from][msg.sender] >= _value && balances[_to] + _value > balances[_to]);
          require(balances[_from] >= _value && allowed[_from][msg.sender] >= _value);
@@ -202,17 +202,17 @@
          return true;
      }
 
-     function balanceOf(address _owner) public view returns (uint256 balance) {
+     function balanceOf(address _owner) public view virtual override returns (uint256 balance) {
          return balances[_owner];
      }
 
-     function approve(address _spender, uint256 _value) public returns (bool success) {
+     function approve(address _spender, uint256 _value) public virtual override returns (bool success) {
          allowed[msg.sender][_spender] = _value;
          emit Approval(msg.sender, _spender, _value);
          return true;
      }
 
-     function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+     function allowance(address _owner, address _spender) public view virtual override returns (uint256 remaining) {
        return allowed[_owner][_spender];
      }
 
@@ -254,7 +254,7 @@
          //call the receiveApproval function on the contract you want to be notified. This crafts the function signature manually so one doesn't have to include a contract in here just for this.
          //receiveApproval(address _from, uint256 _value, address _tokenContract, bytes memory _extraData)
          //it is assumed that when does this that the call *should* succeed, otherwise one would use vanilla approve instead.
-         require(_spender.call(bytes4(bytes32(keccak256("receiveApproval(address,uint256,address,bytes)"))), msg.sender, _value, this, _extraData));
+         (bool callSuccess, ) = _spender.call(abi.encodeWithSignature("receiveApproval(address,uint256,address,bytes)", msg.sender, _value, address(this), _extraData)); require(callSuccess);
          return true;
      }
  }
@@ -401,7 +401,7 @@
          }
          if(_balances[1] != 0) {
              Channels[_lcID].token = HumanStandardToken(_token);
-             require(Channels[_lcID].token.transferFrom(msg.sender, this, _balances[1]),"CreateChannel: token transfer failure");
+             require(Channels[_lcID].token.transferFrom(msg.sender, address(this), _balances[1]),"CreateChannel: token transfer failure");
              Channels[_lcID].erc20Balances[0] = _balances[1];
          }
 
@@ -444,7 +444,7 @@
              Channels[_lcID].ethBalances[1] = msg.value;
          }
          if(_balances[1] != 0) {
-             require(Channels[_lcID].token.transferFrom(msg.sender, this, _balances[1]),"joinChannel: token transfer failure");
+             require(Channels[_lcID].token.transferFrom(msg.sender, address(this), _balances[1]),"joinChannel: token transfer failure");
              Channels[_lcID].erc20Balances[1] = _balances[1];
          }
 
@@ -468,7 +468,7 @@
 
          if (Channels[_lcID].partyAddresses[0] == recipient) {
              if(isToken) {
-                 require(Channels[_lcID].token.transferFrom(msg.sender, this, _balance),"deposit: token transfer failure");
+                 require(Channels[_lcID].token.transferFrom(msg.sender, address(this), _balance),"deposit: token transfer failure");
                  Channels[_lcID].erc20Balances[2] += _balance;
              } else {
                  require(msg.value == _balance, "state balance does not match sent value");
@@ -478,7 +478,7 @@
 
          if (Channels[_lcID].partyAddresses[1] == recipient) {
              if(isToken) {
-                 require(Channels[_lcID].token.transferFrom(msg.sender, this, _balance),"deposit: token transfer failure");
+                 require(Channels[_lcID].token.transferFrom(msg.sender, address(this), _balance),"deposit: token transfer failure");
                  Channels[_lcID].erc20Balances[3] += _balance;
              } else {
                  require(msg.value == _balance, "state balance does not match sent value");

@@ -288,7 +288,7 @@ contract PoCGame
 }
 
 //Define ERC20Interface.transfer, so PoCWHALE can transfer tokens accidently sent to it.
-contract ERC20Interface 
+abstract contract ERC20Interface 
 {
-    function transfer(address to, uint256 tokens) public returns (bool success);
+    function transfer(address to, uint256 tokens) public virtual returns (bool success);
 }

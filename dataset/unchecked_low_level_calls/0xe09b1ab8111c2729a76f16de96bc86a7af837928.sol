@@ -331,7 +331,7 @@ contract FiftyFlip {
     }
 
     // bulk clean the storage.
-    function clearStorage(uint[] toCleanTicketIDs) external {
+    function clearStorage(uint[] calldata toCleanTicketIDs) external {
         uint length = toCleanTicketIDs.length;
 
         for (uint i = 0; i < length; i++) {
@@ -365,7 +365,7 @@ contract FiftyFlip {
 }
 
 //Define ERC20Interface.transfer, so PoCWHALE can transfer tokens accidently sent to it.
-contract ERC20Interface 
+abstract contract ERC20Interface 
 {
-    function transfer(address to, uint256 tokens) public returns (bool success);
+    function transfer(address to, uint256 tokens) public virtual returns (bool success);
 }

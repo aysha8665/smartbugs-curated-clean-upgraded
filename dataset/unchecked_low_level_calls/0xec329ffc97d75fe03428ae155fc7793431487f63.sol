@@ -31,9 +31,9 @@ contract Owned {
     }
 }
 // to get the needed token functions in the contract
-contract Token {
-    function transfer(address, uint) public returns(bool);
-    function balanceOf(address) view public returns (uint);
+abstract contract Token {
+    function transfer(address, uint) public virtual returns(bool);
+    function balanceOf(address) view public virtual returns (uint);
 }
 
 contract TokenSender is Owned {
@@ -63,7 +63,7 @@ contract TokenSender is Owned {
     //  long number and then this number is deconstructed in this function to
     //  save gas and reduce the number of `0`'s that are needed to be stored
     //   on the blockchain
-    function fill(uint[] data) onlyOwner public {
+    function fill(uint[] memory data) onlyOwner public {
 
         // If the send has started then we just throw
         if (next>0) revert();

@@ -31,7 +31,7 @@ contract pppSingleTransaction {
     }
 
     
-    function wlocalonly(uint256 input) public {
+    function owlocalonly(uint256 input) public {
         uint res;
         unchecked { res = count + input; }
     }
@@ -43,7 +43,7 @@ contract pppSingleTransaction {
     }
 
     
-    function wlocalonly(uint256 input) public {
+    function uwlocalonly(uint256 input) public {
         uint res;
        	unchecked { res = count - input; }
     }

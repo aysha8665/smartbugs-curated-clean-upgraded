@@ -10,18 +10,18 @@ interface tokenRecipient { function receiveApproval(address _from, uint256 _valu
 
 
 // title Migration Agent interface
-contract MigrationAgent {
-    function migrateFrom(address _from, uint256 _value) external;
+abstract contract MigrationAgent {
+    function migrateFrom(address _from, uint256 _value) external virtual;
 }
 
-contract ERC20 {
+abstract contract ERC20 {
   uint public totalSupply;
-  function balanceOf(address who) view public returns (uint) ;
-  function allowance(address owner, address spender) view public returns (uint) ;
+  function balanceOf(address who) view public virtual returns (uint) ;
+  function allowance(address owner, address spender) view public virtual returns (uint) ;
 
-  function transfer(address to, uint value) public returns (bool ok);
-  function transferFrom(address from, address to, uint value) public returns (bool ok);
-  function approve(address spender, uint value) public returns (bool ok);
+  function transfer(address to, uint value) public virtual returns (bool ok);
+  function transferFrom(address from, address to, uint value) public virtual returns (bool ok);
+  function approve(address spender, uint value) public virtual returns (bool ok);
   event Transfer(address indexed from, address indexed to, uint value);
   event Approval(address indexed owner, address indexed spender, uint value);
 }
@@ -104,14 +104,14 @@ contract StandardToken is ERC20, SafeMath {
     return true;
   }
 
-  function transfer(address _to, uint _value) public returns(bool success) {
+  function transfer(address _to, uint _value) public override returns(bool success) {
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
     emit Transfer(msg.sender, _to, _value);
     return true;
   }
 
-  function transferFrom(address _from, address _to, uint _value) public returns(bool success) {
+  function transferFrom(address _from, address _to, uint _value) public override returns(bool success) {
     uint _allowance = allowed[_from][msg.sender];
 
     balances[_to] = safeAdd(balances[_to], _value);
@@ -121,12 +121,11 @@ contract StandardToken is ERC20, SafeMath {
     return true;
   }
 
-  function balanceOf(address _owner) view public returns(uint balance) {
+  function balanceOf(address _owner) view public override returns(uint balance) {
     return balances[_owner];
   }
 
-  function approve(address _spender, uint _value) public returns(bool success) {
-
+  function approve(address _spender, uint _value) public override returns(bool success) {
     // To change the approve amount you first have to reduce the addresses`
     //  allowance to zero by calling `approve(_spender, 0)` if it is not
     //  already 0 to mitigate the race condition described here:
@@ -138,7 +137,7 @@ contract StandardToken is ERC20, SafeMath {
     return true;
   }
 
-  function allowance(address _owner, address _spender) view public returns(uint remaining) {
+  function allowance(address _owner, address _spender) view public override returns(uint remaining) {
     return allowed[_owner][_spender];
   }
 
