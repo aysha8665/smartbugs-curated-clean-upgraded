@@ -84,7 +84,7 @@ contract WedIndex is Owned {
 
 
     // make functions to write and read index entries and nubmer of entries
-    function writeIndex(uint indexdate, string wedaddress, string partnernames, uint weddingdate, uint displaymultisig) public {
+    function writeIndex(uint indexdate, string memory wedaddress, string memory partnernames, uint weddingdate, uint displaymultisig) public {
         indexarray.push(IndexArray(block.timestamp, wedaddress, partnernames, weddingdate, displaymultisig));
         emit IndexWritten(block.timestamp, wedaddress, partnernames, weddingdate, displaymultisig);
     }

@@ -13,7 +13,7 @@
          return userBalance[u];
      }
 
-     function addToBalance() payable{
+     function addToBalance() payable public {
          userBalance[msg.sender] += msg.value;
      }
 

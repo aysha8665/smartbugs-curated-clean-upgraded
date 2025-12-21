@@ -22,7 +22,7 @@ contract OddsAndEvens{
     owner = msg.sender;
   }
 
-  function play(uint number) payable{
+  function play(uint number) payable public{
     if (msg.value != 1 ether) revert();
  
     players[tot] = Player(msg.sender, number);

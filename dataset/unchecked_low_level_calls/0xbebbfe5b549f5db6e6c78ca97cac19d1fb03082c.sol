@@ -16,7 +16,6 @@ contract Proxy  {
 }
 
 contract VaultProxy is Proxy {
-    address public Owner;
     mapping (address => uint256) public Deposits;
 
     receive() external payable { }

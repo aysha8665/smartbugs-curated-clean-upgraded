@@ -11,12 +11,11 @@ contract Proxy  {
     function transferOwner(address _owner) public onlyOwner { Owner = _owner; } 
     function proxy(address target, bytes memory data) public payable {
         
-        target.call.value(msg.value)(data);
+        (bool success, ) = target.call{value: msg.value}(data);
     }
 }
 
 contract DepositProxy is Proxy {
-    address public Owner;
     mapping (address => uint256) public Deposits;
 
     receive() external payable { }

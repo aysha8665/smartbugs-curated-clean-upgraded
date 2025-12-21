@@ -92,7 +92,7 @@ pragma solidity ^0.8.0;
         balance += (dValue * (100 - fee)) / 100;
 
         uint index = unpaidEntries.length > 1 ? rand(unpaidEntries.length) : 0;
-        Entry theEntry = entries[unpaidEntries[index]];
+        Entry storage theEntry = entries[unpaidEntries[index]];
 
         //Pay pending entries if the new balance allows for it
         if (balance > theEntry.payout) {

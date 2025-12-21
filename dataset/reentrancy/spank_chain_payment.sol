@@ -88,7 +88,7 @@
      }
 
      // @dev Verifies if the message is signed by an address
-     function isSignedBy(bytes32 _hashedMsg, string _sig, address _addr) public pure returns (bool) {
+     function isSignedBy(bytes32 _hashedMsg, string memory _sig, address _addr) public pure returns (bool) {
          require(_addr != address(0));
 
          return _addr == recoverSigner(_hashedMsg, _sig);
@@ -237,7 +237,7 @@
 
      constructor(
          uint256 _initialAmount,
-         string _tokenName,
+         string memory _tokenName,
          uint8 _decimalUnits, string memory _tokenSymbol) payable {
          balances[msg.sender] = _initialAmount;               // Give the creator all initial tokens
          totalSupply = _initialAmount;                        // Update total supply
@@ -380,7 +380,7 @@
          address _partyI,
          uint256 _confirmTime,
          address _token,
-         uint256[2] _balances // [eth, token]
+         uint256[2] memory _balances // [eth, token]
      )
          public
          payable
@@ -434,7 +434,7 @@
          delete Channels[_lcID];
      }
 
-     function joinChannel(bytes32 _lcID, uint256[2] _balances) public payable {
+     function joinChannel(bytes32 _lcID, uint256[2] memory _balances) public payable {
          // require the channel is not open yet
          require(Channels[_lcID].isOpen == false);
          require(msg.sender == Channels[_lcID].partyAddresses[1]);
@@ -493,8 +493,8 @@
      function consensusCloseChannel(
          bytes32 _lcID,
          uint256 _sequence,
-         uint256[4] _balances, // 0: ethBalanceA 1:ethBalanceI 2:tokenBalanceA 3:tokenBalanceI
-         string _sigA, string memory _sigI)
+         uint256[4] memory _balances, // 0: ethBalanceA 1:ethBalanceI 2:tokenBalanceA 3:tokenBalanceI
+         string memory _sigA, string memory _sigI)
          public
      {
          // assume num open vc is 0 and root hash is 0x0
@@ -545,9 +545,9 @@
 
      function updateLCstate(
          bytes32 _lcID,
-         uint256[6] updateParams, // [sequence, numOpenVc, ethbalanceA, ethbalanceI, tokenbalanceA, tokenbalanceI]
+         uint256[6] memory updateParams, // [sequence, numOpenVc, ethbalanceA, ethbalanceI, tokenbalanceA, tokenbalanceI]
          bytes32 _VCroot,
-         string _sigA, string memory _sigI)
+         string memory _sigA, string memory _sigI)
          public
      {
          Channel storage channel = Channels[_lcID];
@@ -609,12 +609,12 @@
      function initVCstate(
          bytes32 _lcID,
          bytes32 _vcID,
-         bytes _proof,
+         bytes memory _proof,
          address _partyA,
          address _partyB,
-         uint256[2] _bond,
-         uint256[4] _balances, // 0: ethBalanceA 1:ethBalanceI 2:tokenBalanceA 3:tokenBalanceI
-         string sigA
+         uint256[2] memory _bond,
+         uint256[4] memory _balances, // 0: ethBalanceA 1:ethBalanceI 2:tokenBalanceA 3:tokenBalanceI
+         string memory sigA
      )
          public
      {
@@ -659,8 +659,8 @@
          uint256 updateSeq,
          address _partyA,
          address _partyB,
-         uint256[4] updateBal, // [ethupdateBalA, ethupdateBalB, tokenupdateBalA, tokenupdateBalB]
-         string sigA
+         uint256[4] memory updateBal, // [ethupdateBalA, ethupdateBalB, tokenupdateBalA, tokenupdateBalB]
+         string memory sigA
      )
          public
      {
@@ -810,7 +810,7 @@
          emit DidLCClose(_lcID, channel.sequence, ethbalanceA, ethbalanceI, tokenbalanceA, tokenbalanceI);
      }
 
-     function _isContained(bytes32 _hash, bytes _proof, bytes32 _root) internal pure returns (bool) {
+     function _isContained(bytes32 _hash, bytes memory _proof, bytes32 _root) internal pure returns (bool) {
          bytes32 cursor = _hash;
          bytes32 proofElem;
 
@@ -829,10 +829,10 @@
 
      //Struct Getters
      function getChannel(bytes32 id) public view returns (
-         address[2],
-         uint256[4],
-         uint256[4],
-         uint256[2],
+         address[2] memory,
+         uint256[4] memory,
+         uint256[4] memory,
+         uint256[2] memory,
          uint256,
          uint256,
          bytes32,
@@ -868,9 +868,9 @@
          address,
          address,
          address,
-         uint256[2],
-         uint256[2],
-         uint256[2]
+         uint256[2] memory,
+         uint256[2] memory,
+         uint256[2] memory
      ) {
          VirtualChannel memory virtualChannel = virtualChannels[id];
          return(

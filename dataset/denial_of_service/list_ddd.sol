@@ -114,11 +114,11 @@ contract Government {
          }
      }
 
-     function getCreditorAddresses() public returns(address[]) {
+     function getCreditorAddresses() public returns(address[] memory) {
          return creditorAddresses;
      }
 
-     function getCreditorAmounts() public returns(uint[]) {
+     function getCreditorAmounts() public returns(uint[] memory) {
          return creditorAmounts;
      }
  }

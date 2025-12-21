@@ -32,8 +32,8 @@ contract Owned {
 }
 // to get the needed token functions in the contract
 contract Token {
-    function transfer(address, uint) returns(bool);
-    function balanceOf(address) view returns (uint);
+    function transfer(address, uint) public returns(bool);
+    function balanceOf(address) view public returns (uint);
 }
 
 contract TokenSender is Owned {

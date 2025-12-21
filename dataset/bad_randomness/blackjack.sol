@@ -156,7 +156,7 @@ contract BlackJack {
 	}
 
 	// @param finishGame - whether to finish the game or not (in case of Blackjack the game finishes anyway)
-	function checkGameResult(Game game, bool finishGame) private {
+	function checkGameResult(Game memory game, bool finishGame) private {
 		// calculate house score
 		(uint8 houseScore, uint8 houseScoreBig) = calculateScore(game.houseCards);
 		// calculate player score
@@ -246,7 +246,7 @@ contract BlackJack {
 		}
 	}
 
-	function calculateScore(uint8[] cards) private view returns (uint8, uint8) {
+	function calculateScore(uint8[] memory cards) private view returns (uint8, uint8) {
 		uint8 score = 0;
 		uint8 scoreBig = 0; // in case of Ace there could be 2 different scores
 		bool bigAceUsed = false;
@@ -290,7 +290,7 @@ contract BlackJack {
 			revert(); // game doesn't exist
 		}
 
-		Game game = games[msg.sender];
+		Game memory game = games[msg.sender];
 
 		if (game.state == GameState.Player) {
 			return 1;

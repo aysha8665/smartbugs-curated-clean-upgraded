@@ -88,9 +88,9 @@ pragma solidity ^0.8.0;
 
      function cash(uint roundIndex, uint subpotIndex) public {
 
-          subpotsCount = getSubpotsCount(roundIndex);
+         uint256 subpotsCount = getSubpotsCount(roundIndex);
 
-         if(subpotIndex>=subpotsCount)
+         if(subpotIndex >= subpotsCount)
              return;
 
          uint256 decisionBlockNumber = getDecisionBlockNumber(roundIndex,subpotIndex);

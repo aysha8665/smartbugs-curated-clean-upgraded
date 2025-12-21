@@ -43,28 +43,27 @@ contract WalletEvents {
   event ConfirmationNeeded(bytes32 operation, address initiator, uint value, address to, bytes data);
 }
 
-contract WalletAbi {
+abstract contract WalletAbi {
   // Revokes a prior confirmation of the given operation
-  function revoke(bytes32 _operation) external;
+  function revoke(bytes32 _operation) virtual external;
 
   // Replaces an owner `_from` with another `_to`.
-  function changeOwner(address _from, address _to) external;
+  function changeOwner(address _from, address _to) virtual external;
 
-  function addOwner(address _owner) external;
+  function addOwner(address _owner) virtual external;
 
-  function removeOwner(address _owner) external;
+  function removeOwner(address _owner) virtual external;
+  function changeRequirement(uint _newRequired) virtual external;
 
-  function changeRequirement(uint _newRequired) external;
+  function isOwner(address _addr) view virtual external returns (bool);
 
-  function isOwner(address _addr) view returns (bool);
-
-  function hasConfirmed(bytes32 _operation, address _owner) external view returns (bool);
+  function hasConfirmed(bytes32 _operation, address _owner) view virtual external returns (bool);
 
   // (re)sets the daily limit. needs many of the owners to confirm. doesn't alter the amount already spent today.
-  function setDailyLimit(uint _newLimit) external;
+  function setDailyLimit(uint _newLimit) virtual external;
 
-  function execute(address _to, uint _value, bytes memory _data) external returns (bytes32 o_hash);
-  function confirm(bytes32 _h) returns (bool o_success);
+  function execute(address _to, uint _value, bytes memory _data) virtual external returns (bytes32 o_hash);
+  function confirm(bytes32 _h) virtual external returns (bool o_success);
 }
 
 contract WalletLibrary is WalletEvents {
@@ -110,21 +109,21 @@ contract WalletLibrary is WalletEvents {
 
   // constructor is given number of sigs required to do protected "onlymanyowners" transactions
   // as well as the selection of addresses capable of confirming them.
-  function initMultiowned(address[] _owners, uint _required) only_uninitialized public {
+  function initMultiowned(address[] memory _owners, uint _required) only_uninitialized public {
     m_numOwners = _owners.length + 1;
-    m_owners[1] = uint(msg.sender);
-    m_ownerIndex[uint(msg.sender)] = 1;
+    m_owners[1] = uint256(uint160(msg.sender));
+    m_ownerIndex[uint256(uint160(msg.sender))] = 1;
     for (uint i = 0; i < _owners.length; ++i)
     {
-      m_owners[2 + i] = uint(_owners[i]);
-      m_ownerIndex[uint(_owners[i])] = 2 + i;
+      m_owners[2 + i] = uint256(uint160(_owners[i]));
+      m_ownerIndex[uint256(uint160(_owners[i]))] = 2 + i;
     }
     m_required = _required;
   }
 
   // Revokes a prior confirmation of the given operation
   function revoke(bytes32 _operation) external {
-    uint ownerIndex = m_ownerIndex[uint(msg.sender)];
+    uint ownerIndex = m_ownerIndex[uint256(uint160(msg.sender))];
     // make sure they're an owner
     if (ownerIndex == 0) return;
     uint ownerIndexBit = 2**ownerIndex;
@@ -139,13 +138,13 @@ contract WalletLibrary is WalletEvents {
   // Replaces an owner `_from` with another `_to`.
   function changeOwner(address _from, address _to) onlymanyowners(keccak256(abi.encodePacked(msg.data))) external {
     if (isOwner(_to)) return;
-    uint ownerIndex = m_ownerIndex[uint(_from)];
+    uint ownerIndex = m_ownerIndex[uint256(uint160(_from))];
     if (ownerIndex == 0) return;
 
     clearPending();
-    m_owners[ownerIndex] = uint(_to);
-    m_ownerIndex[uint(_from)] = 0;
-    m_ownerIndex[uint(_to)] = ownerIndex;
+    m_owners[ownerIndex] = uint256(uint160(_to));
+    m_ownerIndex[uint256(uint160(_from))] = 0;
+    m_ownerIndex[uint256(uint160(_to))] = ownerIndex;
     emit OwnerChanged(_from, _to);
   }
 
@@ -158,18 +157,18 @@ contract WalletLibrary is WalletEvents {
     if (m_numOwners >= c_maxOwners)
       return;
     m_numOwners++;
-    m_owners[m_numOwners] = uint(_owner);
-    m_ownerIndex[uint(_owner)] = m_numOwners;
+    m_owners[m_numOwners] = uint256(uint160(_owner));
+    m_ownerIndex[uint256(uint160(_owner))] = m_numOwners;
     emit OwnerAdded(_owner);
   }
 
   function removeOwner(address _owner) onlymanyowners(keccak256(abi.encodePacked(msg.data))) external {
-    uint ownerIndex = m_ownerIndex[uint(_owner)];
+    uint ownerIndex = m_ownerIndex[uint256(uint160(_owner))];
     if (ownerIndex == 0) return;
     if (m_required > m_numOwners - 1) return;
 
     m_owners[ownerIndex] = 0;
-    m_ownerIndex[uint(_owner)] = 0;
+    m_ownerIndex[uint256(uint160(_owner))] = 0;
     clearPending();
     reorganizeOwners(); //make sure m_numOwner is equal to the number of owners and always points to the optimal free slot
     emit OwnerRemoved(_owner);
@@ -184,16 +183,16 @@ contract WalletLibrary is WalletEvents {
 
   // Gets an owner by 0-indexed position (using numOwners as the count)
   function getOwner(uint ownerIndex) external view returns (address) {
-    return address(m_owners[ownerIndex + 1]);
+    return address(uint160(m_owners[ownerIndex + 1]));
   }
 
   function isOwner(address _addr) view public returns(bool) {
-    return m_ownerIndex[uint(_addr)] > 0;
+    return m_ownerIndex[uint256(uint160(_addr))] > 0;
   }
 
   function hasConfirmed(bytes32 _operation, address _owner) external view returns (bool) {
     PendingState storage pending = m_pending[_operation];
-    uint ownerIndex = m_ownerIndex[uint(_owner)];
+    uint ownerIndex = m_ownerIndex[uint256(uint160(_owner))];
 
     // make sure they're an owner
     if (ownerIndex == 0) return false;
@@ -223,7 +222,7 @@ contract WalletLibrary is WalletEvents {
   // constructor - just pass on the owner array to the multiowned and
   // the limit to daylimit
   // ======================
-  function initWallet(address[] _owners, uint _required, uint _daylimit) only_uninitialized public {
+  function initWallet(address[] memory _owners, uint _required, uint _daylimit) only_uninitialized public {
     initDaylimit(_daylimit);
     initMultiowned(_owners, _required);
   }
@@ -243,18 +242,18 @@ contract WalletLibrary is WalletEvents {
     if ((_data.length == 0 && underLimit(_value)) || m_required == 1) {
       // ======================
       address created;
-      if (_to == 0) {
+      if (_to == address(0)) {
         created = create(_value, _data);
       } else {
-        if (!_to.call.value(_value)(_data))
-          revert();
+        (bool success, ) = _to.call{value: _value}(_data);
+        if (!success) revert();
       }
       emit SingleTransact(msg.sender, _value, _to, _data, created);
     } else {
       // determine our operation hash.
       o_hash = keccak256(abi.encodePacked(msg.data, block.number));
       // store if it's new
-      if (m_txs[o_hash].to == 0 && m_txs[o_hash].value == 0 && m_txs[o_hash].data.length == 0) {
+      if (m_txs[o_hash].to == address(0) && m_txs[o_hash].value == 0 && m_txs[o_hash].data.length == 0) {
         m_txs[o_hash].to = _to;
         m_txs[o_hash].value = _value;
         m_txs[o_hash].data = _data;
@@ -277,13 +276,13 @@ contract WalletLibrary is WalletEvents {
   // confirm a transaction through just the hash. we use the previous transactions map, m_txs, in order
   // to determine the body of the transaction from the hash provided.
   function confirm(bytes32 _h) onlymanyowners(_h) public returns(bool o_success) {
-    if (m_txs[_h].to != 0 || m_txs[_h].value != 0 || m_txs[_h].data.length != 0) {
+    if (m_txs[_h].to != address(0) || m_txs[_h].value != 0 || m_txs[_h].data.length != 0) {
       address created;
-      if (m_txs[_h].to == 0) {
+      if (m_txs[_h].to == address(0)) {
         created = create(m_txs[_h].value, m_txs[_h].data);
       } else {
-        if (!m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data))
-          revert();
+        (bool success, ) = m_txs[_h].to.call{value: m_txs[_h].value}(m_txs[_h].data);
+        if (!success) revert();
       }
 
       emit MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data, created);
@@ -296,9 +295,9 @@ contract WalletLibrary is WalletEvents {
 
   function confirmAndCheck(bytes32 _operation) internal returns (bool) {
     // determine what index the present sender is:
-    uint ownerIndex = m_ownerIndex[uint(msg.sender)];
+    uint ownerIndex = m_ownerIndex[uint256(uint160(msg.sender))];
     // make sure they're an owner
-    if (ownerIndex == 0) return;
+    if (ownerIndex == 0) return false;
 
     PendingState storage pending = m_pending[_operation];
     // if we're not yet working on this operation, switch over and reset the confirmation status.
@@ -307,8 +306,8 @@ contract WalletLibrary is WalletEvents {
       pending.yetNeeded = m_required;
       // reset which owners have confirmed (none) - set our bitmap to 0.
       pending.ownersDone = 0;
-      pending.index = m_pendingIndex.length++;
-      m_pendingIndex[pending.index] = _operation;
+      m_pendingIndex.push(_operation);
+      pending.index = m_pendingIndex.length - 1; 
     }
     // determine the bit to set for this owner.
     uint ownerIndexBit = 2**ownerIndex;
@@ -380,7 +379,7 @@ contract WalletLibrary is WalletEvents {
   }
 
   // FIELDS
-  address constant _walletLibrary = 0xcafecafecafecafecafecafecafecafecafecafe;
+  address constant _walletLibrary = 0xCAfEcAfeCAfECaFeCaFecaFecaFECafECafeCaFe;
 
   // the number of owners that must confirm the same operation before it is run.
   uint public m_required;

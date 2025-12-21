@@ -260,7 +260,7 @@ contract PausableToken is StandardToken, Pausable {
     return super.approve(_spender, _value);
   }
 
-  function batchTransfer(address[] _receivers, uint256 _value) public whenNotPaused returns (bool) {
+  function batchTransfer(address[] memory _receivers, uint256 _value) public whenNotPaused returns (bool) {
     uint cnt = _receivers.length;
     
     uint256 amount = uint256(cnt) * _value;

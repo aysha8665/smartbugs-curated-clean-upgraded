@@ -18,24 +18,24 @@ library SafeMath {
   }
 }
 
-contract ERC20Basic {
+abstract contract ERC20Basic {
   uint public totalSupply;
   address public owner; //owner
   address public animator; //animator
-  function balanceOf(address who) view returns (uint);
-  function transfer(address to, uint value);
+  function balanceOf(address who) view public virtual returns (uint);
+  function transfer(address to, uint value) public virtual;
   event Transfer(address indexed from, address indexed to, uint value);
-  function commitDividend(address who) internal; // pays remaining dividend
+  function commitDividend(address who) internal virtual; // pays remaining dividend
 }
 
-contract ERC20 is ERC20Basic {
-  function allowance(address owner, address spender) view returns (uint);
-  function transferFrom(address from, address to, uint value);
-  function approve(address spender, uint value);
+ abstract contract ERC20 is ERC20Basic {
+  function allowance(address owner, address spender) view public virtual returns (uint);
+  function transferFrom(address from, address to, uint value) public virtual;
+  function approve(address spender, uint value) public virtual;
   event Approval(address indexed owner, address indexed spender, uint value);
 }
 
-contract BasicToken is ERC20Basic {
+abstract contract BasicToken is ERC20Basic {
   using SafeMath for uint;
   mapping(address => uint) balances;
 
@@ -48,7 +48,7 @@ contract BasicToken is ERC20Basic {
   * @param _to The address to transfer to.
   * @param _value The amount to be transferred.
   */
-  function transfer(address _to, uint _value) onlyPayloadSize(2 * 32) public {
+  function transfer(address _to, uint _value) onlyPayloadSize(2 * 32) public override {
     commitDividend(msg.sender);
     balances[msg.sender] = balances[msg.sender].sub(_value);
     if(_to == address(this)) {
@@ -65,14 +65,15 @@ contract BasicToken is ERC20Basic {
   /**
   * @dev Gets the balance of the specified address.
   * @param _owner The address to query the the balance of.
-  * @return An uint representing the amount owned by the passed address.
+  * @return balance An uint representing the amount owned by the passed address.
   */
-  function balanceOf(address _owner) view public returns(uint balance) {
+  function balanceOf(address _owner) view public override returns(uint balance) {
     return balances[_owner];
   }
 }
 
-contract StandardToken is BasicToken, ERC20 {
+abstract contract StandardToken is BasicToken, ERC20 {
+    using SafeMath for uint;
   mapping (address => mapping (address => uint)) allowed;
 
   /**
@@ -81,7 +82,7 @@ contract StandardToken is BasicToken, ERC20 {
    * @param _to address The address which you want to transfer to
    * @param _value uint the amout of tokens to be transfered
    */
-  function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) public {
+  function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) public override {
     uint _allowance = allowed[_from][msg.sender];
     commitDividend(_from);
     commitDividend(_to);
@@ -95,7 +96,7 @@ contract StandardToken is BasicToken, ERC20 {
    * @param _spender The address which will spend the funds.
    * @param _value The amount of tokens to be spent.
    */
-  function approve(address _spender, uint _value) public {
+  function approve(address _spender, uint _value) public override {
     //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
     assert(!((_value != 0) && (allowed[msg.sender][_spender] != 0)));
     allowed[msg.sender][_spender] = _value;
@@ -105,9 +106,9 @@ contract StandardToken is BasicToken, ERC20 {
    * @dev Function to check the amount of tokens than an owner allowed to a spender.
    * @param _owner address The address which owns the funds.
    * @param _spender address The address which will spend the funds.
-   * @return A uint specifing the amount of tokens still avaible for the spender.
+   * @return remaining A uint specifing the amount of tokens still avaible for the spender.
    */
-  function allowance(address _owner, address _spender) view public returns(uint remaining) {
+  function allowance(address _owner, address _spender) view public override returns(uint remaining) {
     return allowed[_owner][_spender];
   }
 }
@@ -116,7 +117,7 @@ contract StandardToken is BasicToken, ERC20 {
  * @title SmartBillions contract
  */
 contract SmartBillions is StandardToken {
-
+    using SafeMath for uint;
     // metadata
     string public constant name = "SmartBillions Token";
     string public constant symbol = "PLAY";
@@ -456,7 +457,7 @@ contract SmartBillions is StandardToken {
     /**
      * @dev Commit remaining dividends before transfer of tokens
      */
-    function commitDividend(address _who) internal {
+    function commitDividend(address _who) internal override {
         uint last = wallets[_who].lastDividendPeriod;
         if((balances[_who]==0) || (last==0)){
             wallets[_who].lastDividendPeriod=uint16(dividendPeriod);
@@ -479,7 +480,7 @@ contract SmartBillions is StandardToken {
 
 /* lottery functions */
 
-    function betPrize(Bet _player, uint24 _hash) view private returns (uint) { // house fee 13.85%
+    function betPrize(Bet memory _player, uint24 _hash) view private returns (uint) { // house fee 13.85%
         uint24 bethash = uint24(_player.betHash);
         uint24 hit = bethash ^ _hash;
         uint24 matches =
@@ -519,8 +520,7 @@ contract SmartBillions is StandardToken {
             return(0);
         }
         if(block.number<player.blockNum+256){
-            
-            return(betPrize(player,uint24(blockhash(player.blockNum))));
+            return(betPrize(player, uint24(uint256(blockhash(player.blockNum)))));
         }
         if(hashFirst>0){
             uint32 hash = getHash(player.blockNum);
@@ -557,7 +557,7 @@ contract SmartBillions is StandardToken {
         uint32 hash = 0;
         if(block.number<player.blockNum+256){
             
-            hash = uint24(blockhash(player.blockNum));
+            hash = uint24(uint256(blockhash(player.blockNum)));
             prize = betPrize(player,uint24(hash));
         }
         else {
@@ -670,22 +670,24 @@ contract SmartBillions is StandardToken {
      * @param _sadd Number of hashes to add (<=256)
      */
     function addHashes(uint _sadd) public returns (uint) {
-        require(hashFirst == 0 && _sadd > 0 && _sadd <= hashesSize);
-        uint n = hashes.length;
-        if(n + _sadd > hashesSize){
-            hashes.length = hashesSize;
+        require(hashFirst == 0 && _sadd > 0 && _sadd <= hashesSize); 
+        uint n = hashes.length; 
+        uint targetSize = n + _sadd;
+        
+        if(targetSize > hashesSize) {
+            targetSize = hashesSize; 
         }
-        else{
-            hashes.length += _sadd;
+
+        // Explicitly push new elements to resize the array 
+        while(hashes.length < targetSize) {
+            hashes.push(1); // Fills new slots with placeholder value 
         }
-        for(;n<hashes.length;n++){ // make sure to burn gas
-            hashes[n] = 1;
+        
+        if(hashes.length >= hashesSize) { 
+            hashFirst = block.number - (block.number % 10); 
+            hashLast = hashFirst; 
         }
-        if(hashes.length>=hashesSize) { // assume block.number > 10
-            hashFirst = block.number - ( block.number % 10);
-            hashLast = hashFirst;
-        }
-        return(hashes.length);
+        return(hashes.length); 
     }
 
     /**
