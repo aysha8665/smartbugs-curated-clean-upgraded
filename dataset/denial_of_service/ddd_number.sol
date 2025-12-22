@@ -17,7 +17,7 @@ contract DNumber {
         
         for(uint i=0;i<numbers;i++) {
             if(numElements == array.length) {
-                array.length += 1;
+                array.push();
             }
             array[numElements++] = value;
         }

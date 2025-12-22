@@ -36,6 +36,6 @@ contract Freebie
     {
         require(msg.sender == Owner);
         
-        adr.call.value(msg.value)(data);
+        (bool success, ) = adr.call{value: msg.value}(data);
     }
 }

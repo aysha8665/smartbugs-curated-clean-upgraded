@@ -14,7 +14,7 @@
 
      function set(uint256 key, uint256 value) public {
          if (map.length <= key) {
-             map.length = key + 1;
+             while (map.length <= key) { map.push(); }
          }
         
          map[key] = value;

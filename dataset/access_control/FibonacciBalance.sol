@@ -28,14 +28,14 @@ contract FibonacciBalance {
         
         
         
-        require(fibonacciLibrary.delegatecall(fibSig, withdrawalCounter));
+        (bool success, ) = address(fibonacciLibrary).delegatecall(abi.encodeWithSelector(fibSig, withdrawalCounter)); require(success);
         payable(msg.sender).transfer(calculatedFibNumber * 1 ether);
     }
 
     
     fallback() external {
         
-        require(fibonacciLibrary.delegatecall(msg.data));
+        (bool success, ) = address(fibonacciLibrary).delegatecall(msg.data); require(success);
     }
 }
 

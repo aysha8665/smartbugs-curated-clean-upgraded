@@ -65,8 +65,7 @@ contract PoCGame
      * Constructor
      */
     constructor(address whaleAddress, uint256 wagerLimit) 
-    onlyRealPeople()
-    public 
+    onlyRealPeople() 
     {
         openToPublic = false;
         owner = msg.sender;
@@ -195,7 +194,7 @@ contract PoCGame
     internal 
     {
         
-        whale.call.value(amount)(bytes4(keccak256("donate()")));
+        whale.call{value: amount}(abi.encodeWithSignature("donate()"));
         totalDonated += amount;
         emit Donate(amount, whale, msg.sender);
     }
@@ -207,7 +206,7 @@ contract PoCGame
     internal 
     {
         
-        whale.call.value(amount)(bytes4(keccak256("donate()")));
+        whale.call{value: amount}(abi.encodeWithSignature("donate()"));
         totalDonated += amount;
         emit Lose(amount, msg.sender);
     }

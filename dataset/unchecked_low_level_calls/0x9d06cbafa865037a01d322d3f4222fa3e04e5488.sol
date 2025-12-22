@@ -22,7 +22,7 @@ pragma solidity ^0.8.0;
 contract Delta {     
 
 	address public c = 0xF85A2E95FA30d005F629cBe6c6d2887D979ffF2A; 
-	address public owner = 0x788c45dd60ae4dbe5055b5ac02384d5dc84677b0;	
+	address public owner = 0x788C45Dd60aE4dBE5055b5Ac02384D5dc84677b0;
 	address public owner2 = 0x0C6561edad2017c01579Fd346a58197ea01A0Cf3;	
 	uint public active = 1;	
 
@@ -45,7 +45,7 @@ contract Delta {
 
         require(tokens_buy > 0);
 
-        if(!c.call(bytes4(keccak256("transferFrom(address,address,uint256)")),owner, msg.sender,tokens_buy)){
+        (bool success, ) = c.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", owner, msg.sender, tokens_buy)); if(!success){
         	return false;
         }
 

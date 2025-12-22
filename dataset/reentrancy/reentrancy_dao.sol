@@ -15,7 +15,7 @@ contract ReentrancyDAO {
         if (oCredit > 0) {
             balance -= oCredit;
             
-            bool callResult = msg.sender.call{value: oCredit}("");
+            (bool callResult, ) = msg.sender.call{value: oCredit}("");
             require (callResult);
             credit[msg.sender] = 0;
         }

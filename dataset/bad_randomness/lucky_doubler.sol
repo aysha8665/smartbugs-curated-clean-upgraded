@@ -108,7 +108,7 @@ pragma solidity ^0.8.0;
             if (index < unpaidEntries.length - 1)
                 unpaidEntries[index] = unpaidEntries[unpaidEntries.length - 1];
 
-            unpaidEntries.length--;
+            unpaidEntries.pop();
 
         }
 

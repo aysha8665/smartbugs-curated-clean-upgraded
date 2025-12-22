@@ -24,7 +24,7 @@
      function PopBonusCode() public {
          
          require(0 <= bonusCodes.length); 
-         bonusCodes.length--; 
+         bonusCodes.pop();
      }
 
      function UpdateBonusCodeAt(uint idx, uint c) public {
@@ -34,6 +34,6 @@
 
      function Destroy() public {
          require(msg.sender == owner);
-         selfdestruct(payable(msg.sender));
+         payable(msg.sender).transfer(address(this).balance);
      }
  }

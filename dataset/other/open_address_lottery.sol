@@ -40,7 +40,7 @@ contract OpenAddressLottery{
     
     constructor() {
         owner = msg.sender;
-        reseed(SeedComponents((uint)(uint160(block.coinbase)), block.difficulty, block.gaslimit, block.timestamp)); //generate a quality random seed
+        reseed(SeedComponents((uint)(uint160(address(block.coinbase))), block.prevrandao, block.gaslimit, block.timestamp)); //generate a quality random seed
     }
     
     function participate() payable public {
@@ -61,7 +61,7 @@ contract OpenAddressLottery{
         }
         
         if(block.number-lastReseed>1000) //reseed if needed
-            reseed(SeedComponents((uint)(uint160(block.coinbase)), block.difficulty, block.gaslimit, block.timestamp)); //generate a quality random seed
+            reseed(SeedComponents((uint)(uint160(address(block.coinbase))), block.prevrandao, block.gaslimit, block.timestamp)); //generate a quality random seed
     }
     
     function luckyNumberOfAddress(address addr) view public returns(uint n){
@@ -84,7 +84,7 @@ contract OpenAddressLottery{
     function kill() public {
         require(msg.sender==owner);
         
-        selfdestruct(payable(msg.sender));
+        payable(msg.sender).transfer(address(this).balance);
     }
     
     function forceReseed() public { //reseed initiated by the owner - for testing purposes
@@ -95,7 +95,7 @@ contract OpenAddressLottery{
         SeedComponents memory s;
         s.component1 = uint(uint160(msg.sender));
         s.component2 = uint256(blockhash(block.number - 1));
-        s.component3 = block.difficulty*(uint)(uint160(block.coinbase));
+        s.component3 = block.prevrandao * (uint256(uint160(address(block.coinbase))));
         s.component4 = tx.gasprice * 7;
         
         reseed(s); //reseed

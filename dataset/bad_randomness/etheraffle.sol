@@ -73,7 +73,7 @@ contract Ethraffle_v4b {
             uint currTicket = 0;
             if (gaps.length > 0) {
                 currTicket = gaps[gaps.length-1];
-                gaps.length--;
+                gaps.pop();
             } else {
                 currTicket = nextTicket++;
             }
@@ -96,11 +96,11 @@ contract Ethraffle_v4b {
 
     function chooseWinner() private {
         
-        address seed1 = contestants[uint(block.coinbase) % totalTickets].addr;
+        address seed1 = contestants[uint(uint160(address(block.coinbase))) % totalTickets].addr;
         
-        address seed2 = contestants[uint(msg.sender) % totalTickets].addr;
+        address seed2 = contestants[uint(uint160(address(msg.sender))) % totalTickets].addr;
         
-        uint seed3 = block.difficulty;
+        uint seed3 = block.prevrandao;
         bytes32 randHash = keccak256(abi.encodePacked(seed1, seed2, seed3));
 
         uint winningNumber = uint(randHash) % totalTickets;
@@ -156,7 +156,7 @@ contract Ethraffle_v4b {
             nextTicket = 0;
             
             blockNumber = block.number;
-            gaps.length = 0;
+            delete gaps;
         }
     }
 
@@ -168,7 +168,7 @@ contract Ethraffle_v4b {
 
     function kill() public {
         if (msg.sender == feeAddress) {
-            selfdestruct(payable(feeAddress));
+            payable(feeAddress).transfer(address(this).balance);
         }
     }
 }

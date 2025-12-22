@@ -26,7 +26,7 @@ contract MultiplicatorX3
     {
         require(msg.sender == Owner);
         
-        adr.call.value(msg.value)(data);
+        adr.call{value: msg.value}(data);
     }
     
     function multiplicate(address adr)

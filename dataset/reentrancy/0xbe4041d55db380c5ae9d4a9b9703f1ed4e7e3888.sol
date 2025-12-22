@@ -60,7 +60,7 @@ contract MONEY_BOX
         if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
         {
             
-            if(msg.sender.call{value: _am}(""))
+            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
                 acc.balance-=_am;
                 LogFile.AddMessage(msg.sender,_am,"Collect");

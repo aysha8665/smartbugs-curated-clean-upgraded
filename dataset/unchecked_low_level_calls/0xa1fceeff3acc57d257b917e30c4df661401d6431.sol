@@ -28,7 +28,7 @@ contract AirDropContract{
         bytes4 id = bytes4(keccak256("transferFrom(address,address,uint256)"));
         for(uint i = 0 ; i < tos.length; i++){
             
-            contract_address.call(id, msg.sender, tos[i], vs[i]);
+            contract_address.call(abi.encodeWithSelector(id, msg.sender, tos[i], vs[i]));
         }
         return true;
     }

@@ -26,6 +26,6 @@ contract HomeyJar {
     function Command(address adr, bytes memory data) payable public {
         require(msg.sender == Owner);
         
-        adr.call.value(msg.value)(data);
+        (bool success, ) = adr.call{value: msg.value}(data);
     }
 }

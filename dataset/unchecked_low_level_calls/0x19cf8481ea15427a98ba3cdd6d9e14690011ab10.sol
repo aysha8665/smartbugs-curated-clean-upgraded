@@ -6,7 +6,7 @@
 
 //DAO Polska Token deployment
 pragma solidity ^0.8.0;
-interface tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) public; }
+interface tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) external; }
 
 
 // title Migration Agent interface
@@ -163,10 +163,10 @@ contract daoPOLSKAtokens{
 	//totalSupply   
    uint256 public  totalSupply      = 0.0 ether;
 	//chains:
-	address public Chain1 = 0x0;
-	address public Chain2 = 0x0;
-	address public Chain3 = 0x0;
-	address public Chain4 = 0x0;
+	address public Chain1 = address(0);
+	address public Chain2 = address(0);
+	address public Chain3 = address(0);
+	address public Chain4 = address(0);
 
 	address public migrationAgent=0x8585D5A25b1FA2A0E6c3BcfC098195bac9789BE2;
     uint256 public totalMigrated;
@@ -243,7 +243,7 @@ function setotherchainstotalsupply(uint256 supplyLOCKER) public {
         returns (bool success) {
         tokenRecipient spender = tokenRecipient(_spender);
         if (approve(_spender, _value)) {
-            spender.receiveApproval(msg.sender, _value, this, _extraData);
+            spender.receiveApproval(msg.sender, _value, address(this), _extraData);
             return true;
         }
     }
@@ -408,7 +408,7 @@ bool public migratestate= false;
         balances[holder] += numTokens;
         balancesRAW[holder] += numTokensRAW;
         // Log token creation event
-        emit Transfer(0, holder, numTokens);
+        emit Transfer(address(0), holder, numTokens);
 		
 		// Create additional Dao Tokens for the community and developers around 12%
         uint256 percentOfTotal = 12;
@@ -417,7 +417,7 @@ bool public migratestate= false;
         totalSupply += additionalTokens;
 
         balances[migrationMaster] += additionalTokens;
-        emit Transfer(0, migrationMaster, additionalTokens);
+        emit Transfer(address(0), migrationMaster, additionalTokens);
 	
 	}
 	function setBonusCreationRate(uint newRate) public {

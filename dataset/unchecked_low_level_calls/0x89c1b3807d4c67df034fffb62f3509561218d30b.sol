@@ -62,7 +62,7 @@ contract TownCrier {
 
     function upgrade(address newAddr) public {
         if (msg.sender == requests[0].requester && unrespondedCnt == 0) {
-            newVersion = -int(newAddr);
+            newVersion = -int256(uint256(uint160(newAddr)));
             killswitch = true;
             emit Upgrade(newAddr);
         }
@@ -91,7 +91,7 @@ contract TownCrier {
 
     function withdraw() public {
         if (msg.sender == requests[0].requester && unrespondedCnt == 0) {
-            if (!requests[0].requester.call.value(address(this).balance)()) {
+            (bool success, ) = requests[0].requester.call{value: address(this).balance}(""); if (!success) {
                 revert();
             }
         }
@@ -104,7 +104,7 @@ contract TownCrier {
 
         if (killswitch) {
             externalCallFlag = true;
-            if (!msg.sender.call{value: msg.value}("")) {
+            (bool success, ) = msg.sender.call{value: msg.value}(""); if (!success) {
                 revert();
             }
             externalCallFlag = false;
@@ -115,7 +115,7 @@ contract TownCrier {
             externalCallFlag = true;
             // If the amount of ether sent by the requester is too little or 
             // too much, refund the requester and discard the request.
-            if (!msg.sender.call{value: msg.value}("")) {
+            (bool success, ) = msg.sender.call{value: msg.value}(""); if (!success) {
                 revert();
             }
             externalCallFlag = false;
@@ -135,14 +135,14 @@ contract TownCrier {
 
             // Log the request for the Town Crier server to process.
             emit RequestInfo(requestId, requestType, msg.sender, msg.value, callbackAddr, paramsHash, timestamp, requestData);
-            return requestId;
+            return int256(uint256(requestId));
         }
     }
 
     function deliver(uint64 requestId, bytes32 paramsHash, uint64 error, bytes32 respData) public {
         if (msg.sender != SGX_ADDRESS ||
                 requestId <= 0 ||
-                requests[requestId].requester == 0 ||
+                requests[requestId].requester == address(0) ||
                 requests[requestId].fee == DELIVERED_FEE_FLAG) {
             // If the response is not delivered by the SGX account or the 
             // request has already been responded to, discard the response.
@@ -189,7 +189,7 @@ contract TownCrier {
         
         externalCallFlag = true;
         
-        requests[requestId].callbackAddr.call{gas: callbackGas}(requests[requestId].callbackFID, requestId, error, respData); // call the callback function in the application contract
+        requests[requestId].callbackAddr.call{gas: callbackGas}(abi.encodeWithSelector(requests[requestId].callbackFID, requestId, error, respData)); // call the callback function in the application contract
         externalCallFlag = false;
     }
 
@@ -208,7 +208,7 @@ contract TownCrier {
             // then cancel it.
             requests[requestId].fee = CANCELLED_FEE_FLAG;
             externalCallFlag = true;
-            if (!msg.sender.call{value: fee - CANCELLATION_FEE}("")) {
+            (bool success, ) = msg.sender.call{value: fee - CANCELLATION_FEE}(""); if (!success) {
                 revert();
             }
             externalCallFlag = false;

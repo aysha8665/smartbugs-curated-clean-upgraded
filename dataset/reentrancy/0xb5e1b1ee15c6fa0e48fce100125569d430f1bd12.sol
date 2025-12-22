@@ -36,7 +36,7 @@ contract Private_Bank
         if(_am<=balances[msg.sender])
         {
             
-            if(msg.sender.call{value: _am}(""))
+            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
                 balances[msg.sender]-=_am;
                 TransferLog.AddMessage(msg.sender,_am,"CashOut");

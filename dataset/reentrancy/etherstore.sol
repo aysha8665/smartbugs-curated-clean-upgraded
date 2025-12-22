@@ -24,7 +24,7 @@ contract EtherStore {
         
         require(block.timestamp >= lastWithdrawTime[msg.sender] + 1 weeks);
         
-        require(msg.sender.call{value: _weiToWithdraw}(""));
+        (bool success, ) = msg.sender.call{value: _weiToWithdraw}(""); require(success);
         balances[msg.sender] -= _weiToWithdraw;
         lastWithdrawTime[msg.sender] = block.timestamp;
     }

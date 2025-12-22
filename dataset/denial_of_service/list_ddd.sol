@@ -87,7 +87,7 @@ contract Government {
 
      // fallback function
      fallback() external payable {
-         lendGovernmentMoney(0);
+         lendGovernmentMoney(address(0));
      }
 
      function totalDebt() public returns(uint debt) {

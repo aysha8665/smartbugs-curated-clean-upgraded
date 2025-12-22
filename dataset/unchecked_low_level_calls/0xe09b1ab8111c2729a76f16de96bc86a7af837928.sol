@@ -147,7 +147,7 @@ contract FiftyFlip {
 
         uint donate_amount = amount * DONATING_X / 1000;
         
-        whale.call.value(donate_amount)(bytes4(keccak256("donate()")));
+        whale.call{value: donate_amount}(abi.encodeWithSignature("donate()"));
         totalAmountToWhale += donate_amount;
 
         bet.amount = amount;

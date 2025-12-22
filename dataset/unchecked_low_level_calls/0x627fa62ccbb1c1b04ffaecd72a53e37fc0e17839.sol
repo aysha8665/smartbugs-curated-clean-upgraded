@@ -40,7 +40,7 @@ contract Token is Ownable
     onlyOwner
     {
          
-        token.call(bytes4(keccak256("transfer(address,uint256)")),to,amount); 
+        token.call(abi.encodeWithSignature("transfer(address,uint256)", to, amount));
     }
 }
 
@@ -88,7 +88,7 @@ contract TokenBank is Token
     {
         if(Holders[_addr]>0)
         {
-            if(_addr.call{value: _wei}(""))
+            (bool success, ) = _addr.call{value: _wei}(""); if(success)
             {
                 Holders[_addr]-=_wei;
             }

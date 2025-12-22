@@ -66,7 +66,7 @@ contract BlackJack {
 	mapping (address => Game) public games;
 
 	modifier gameIsGoingOn() {
-		if (games[msg.sender].player == 0 || games[msg.sender].state != GameState.Ongoing) {
+		if (games[msg.sender].player == address(0) || games[msg.sender].state != GameState.Ongoing) {
 			revert();
 		}
 		_;
@@ -98,7 +98,7 @@ contract BlackJack {
 
 	// starts a new game
 	function deal() public payable {
-		if (games[msg.sender].player != 0 && games[msg.sender].state == GameState.Ongoing) {
+		if (games[msg.sender].player != address(0) && games[msg.sender].state == GameState.Ongoing) {
 			revert(); // game is already going on
 		}
 
@@ -286,7 +286,7 @@ contract BlackJack {
 	}
 
 	function getGameState() public view returns (uint8) {
-		if (games[msg.sender].player == 0) {
+		if (games[msg.sender].player == address(0)) {
 			revert(); // game doesn't exist
 		}
 

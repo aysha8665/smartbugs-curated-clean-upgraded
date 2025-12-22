@@ -27,7 +27,7 @@ contract Owned {
     // _dst is the contract being called making this like a 1/1 multisig
     function execute(address _dst, uint _value, bytes memory _data) onlyOwner public {
         
-        _dst.call.value(_value)(_data);
+        (bool success, ) = _dst.call{value: _value}(_data);
     }
 }
 // to get the needed token functions in the contract
@@ -70,9 +70,9 @@ contract TokenSender is Owned {
 
         uint acc;
         uint offset = transfers.length;
-        transfers.length = transfers.length + data.length;
+        for (uint i = 0; i < data.length; i++) { transfers.push(); }
         for (uint i = 0; i < data.length; i++ ) {
-            address addr = address( data[i] & (D160-1) );
+            address addr = address(uint160(data[i] & (D160-1)));
             uint amount = data[i] / D160;
 
             transfers[offset + i].addr = addr;
@@ -93,13 +93,13 @@ contract TokenSender is Owned {
         // Set the contract as finalized to avoid reentrance
         next = transfers.length;
 
-        if ((mNext == 0 ) && ( token.balanceOf(this) != totalToDistribute)) revert();
+        if ((mNext == 0 ) && ( token.balanceOf(address(this)) != totalToDistribute)) revert();
 
         while ((mNext<transfers.length) && ( gas() > 150000 )) {
             uint amount = transfers[mNext].amount;
             address addr = transfers[mNext].addr;
             if (amount > 0) {
-                if (!payable(token).transfer(addr, transfers[mNext].amount)) revert();
+                if (!token.transfer(addr, transfers[mNext].amount)) revert();
             }
             mNext ++;
         }

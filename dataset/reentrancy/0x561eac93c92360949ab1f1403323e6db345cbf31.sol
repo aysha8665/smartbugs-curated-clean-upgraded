@@ -51,7 +51,7 @@ contract BANK_SAFE
         if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am)
         {
             
-            if(msg.sender.call{value: _am}(""))
+            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
                 balances[msg.sender]-=_am;
                 Log.AddMessage(msg.sender,_am,"Collect");

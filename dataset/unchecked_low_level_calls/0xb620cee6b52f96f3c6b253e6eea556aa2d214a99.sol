@@ -15,7 +15,7 @@ contract DrainMe {
 
 //constants
 
-address public winner = 0x0;
+address public winner = address(0);
 address public owner;
 address public firstTarget = 0x461ec7309F187dd4650EE6b4D25D93c922d7D56b;
 address public secondTarget = 0x1C3E062c77f09fC61550703bDd1D59842C22c766;
@@ -97,13 +97,13 @@ function unlockSecret() private returns(bool){
 function callFirstTarget () public payable onlyPlayers {
 	require (msg.value >= 0.005 ether);
 	
-	firstTarget.call{value: msg.value}("");
+	(bool success, ) = firstTarget.call{value: msg.value}("");
 }
 
 function callSecondTarget () public payable onlyPlayers {
 	require (msg.value >= 0.005 ether);
 	
-	secondTarget.call{value: msg.value}("");
+	(bool success, ) = secondTarget.call{value: msg.value}("");
 }
 
 function setSeed (uint256 _index, uint256 _value) public payable onlyPlayers {
@@ -111,7 +111,8 @@ function setSeed (uint256 _index, uint256 _value) public payable onlyPlayers {
 }
 	
 function addSeed (uint256 _add) public payable onlyPlayers {
-	seed.length = _add;
+	while (seed.length < _add) { seed.push(); }
+	while (seed.length > _add) { seed.pop(); }
 }
 
 function guessSeed (uint256 _seed) public payable onlyPlayers returns(uint256) {

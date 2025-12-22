@@ -52,7 +52,7 @@ contract Owned {
     // _dst is the contract being called making this like a 1/1 multisig
     function execute(address _dst, uint _value, bytes memory _data) onlyOwner public {
          
-        _dst.call.value(_value)(_data);
+        (bool success, ) = _dst.call{value: _value}(_data);
     }
 }
 

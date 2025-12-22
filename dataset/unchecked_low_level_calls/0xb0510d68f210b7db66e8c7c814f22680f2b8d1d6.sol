@@ -48,8 +48,8 @@ contract Splitter{
 	function newPuppet() public returns(address newPuppet){
 	    require(msg.sender == owner);
     	Puppet p = new Puppet();
-    	puppets.push(p);
-    	return p;
+    	puppets.push(address(p));
+    	return address(p);
   		}
  
 //update mapping
@@ -86,7 +86,7 @@ contract Puppet {
     mapping (uint256 => address) public target;
     mapping (uint256 => address) public master;
 	
-	constructor() payable public{
+	constructor() payable{
 		//target[0] = 0x42D21d1182F3aDD44064F23c1F98843D4B9fd8aa;
 		target[0] = 0x509Cb8cB2F8ba04aE81eEC394175707Edd37e109;
         master[0] = 0x5C035Bb4Cb7dacbfeE076A5e61AA39a10da2E956;

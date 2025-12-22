@@ -21,9 +21,9 @@
          
          
          
-         if( ! (msg.sender.call{value: userBalance[msg.sender]}("") ) ){
-             revert();
-         }
-         userBalance[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: userBalance[msg.sender]}(""); if (!success) {
+            revert();
+        }
+        userBalance[msg.sender] = 0;
      }
  }

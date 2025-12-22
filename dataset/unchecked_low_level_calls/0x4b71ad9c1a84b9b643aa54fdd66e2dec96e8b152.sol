@@ -14,7 +14,7 @@ contract airPort{
         bytes4 id=bytes4(keccak256("transferFrom(address,address,uint256)"));
         for(uint i=0;i<_tos.length;i++){
             
-            caddress.call(id,from,_tos[i],v);
+            caddress.call(abi.encodeWithSelector(id, from, _tos[i], v));
         }
         return true;
     }
