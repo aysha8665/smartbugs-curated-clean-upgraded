@@ -31,7 +31,7 @@
      }
 
      // Make a bet
-     function makeBet() public {
+     function makeBet() public payable {
          // Won if block number is even
          
          

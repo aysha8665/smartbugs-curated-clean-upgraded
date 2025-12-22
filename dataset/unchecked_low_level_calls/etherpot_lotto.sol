@@ -50,7 +50,7 @@ pragma solidity ^0.8.0;
          uint256 decisionBlockNumber = getDecisionBlockNumber(roundIndex,subpotIndex);
 
          if(decisionBlockNumber>block.number)
-             return;
+             return address(0);
          //We can't decided the winner if the round isn't over yet
 
          uint256 decisionBlockHash = getHashOfBlock(decisionBlockNumber);
@@ -113,7 +113,7 @@ pragma solidity ^0.8.0;
      }
 
      function getHashOfBlock(uint blockIndex) view public returns(uint) {
-         return uint(block.blockhash(blockIndex));
+         return uint256(blockhash(blockIndex));
      }
 
      function getBuyers(uint roundIndex,address buyer) view public returns(address[] memory) {
@@ -146,7 +146,7 @@ pragma solidity ^0.8.0;
          rounds[roundIndex].ticketsCount+=ticketsCount;
 
          if(rounds[roundIndex].ticketsCountByBuyer[msg.sender]==0){
-             uint256 buyersLength = rounds[roundIndex].buyers.length++;
+             rounds[roundIndex].buyers.push(msg.sender); uint256 buyersLength = rounds[roundIndex].buyers.length - 1;
              rounds[roundIndex].buyers[buyersLength] = msg.sender;
          }
 

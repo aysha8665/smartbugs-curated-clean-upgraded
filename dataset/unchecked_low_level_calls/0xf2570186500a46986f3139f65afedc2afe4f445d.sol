@@ -15,7 +15,7 @@ contract RealOldFuckMaker {
         uint32 i;
         for (i = 0; i < number; i++) {
            
-            fuck.call(bytes4(keccak256("giveBlockReward()")));
+            (bool success, ) = fuck.call(abi.encodeWithSignature("giveBlockReward()"));
         }
     }
 }

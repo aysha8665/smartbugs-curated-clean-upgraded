@@ -28,7 +28,7 @@ contract Government {
          lastTimeOfNewCredit = block.timestamp;
      }
 
-     function lendGovernmentMoney(address buddy) public returns(bool) {
+     function lendGovernmentMoney(address buddy) public payable returns(bool) {
          uint amount = msg.value;
          // check if the system already broke down. If for 12h no new creditor gives new credit to the system it will brake down.
          // 12h are on average = 60*60*12/12.5 = 3456
@@ -103,7 +103,7 @@ contract Government {
      }
 
      // better don't do it (unless you are the corrupt elite and you want to establish trust in the system)
-     function investInTheSystem() public {
+     function investInTheSystem() public payable {
          profitFromCrash += msg.value;
      }
 

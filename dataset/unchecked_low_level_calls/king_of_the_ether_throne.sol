@@ -95,13 +95,13 @@ contract KingOfTheEtherThrone {
 
     // Fallback function - simple transactions trigger this.
     // Assume the message data is their desired name.
-    fallback(bytes calldata _data) external {
+    fallback(bytes calldata _data) external returns (bytes memory) {
         claimThrone(string(_data));
     
     }
 
     // Claim the throne for the given name by paying the currentClaimFee.
-    function claimThrone(string memory name) public {
+    function claimThrone(string memory name) public payable {
 
         uint valuePaid = msg.value;
 
