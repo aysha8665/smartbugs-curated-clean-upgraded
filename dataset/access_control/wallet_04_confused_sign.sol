@@ -21,15 +21,19 @@
      }
 
      function deposit() public payable {
-         assert(balances[msg.sender] + msg.value > balances[msg.sender]);
-         balances[msg.sender] += msg.value;
+        unchecked {
+            assert(balances[msg.sender] + msg.value > balances[msg.sender]);
+            balances[msg.sender] += msg.value;
+        }
      }
 
      function withdraw(uint256 amount) public {
          
          require(amount >= balances[msg.sender]);
          payable(msg.sender).transfer(amount);
-         balances[msg.sender] -= amount;
+         unchecked {
+            balances[msg.sender] -= amount;
+        }
      }
 
      // In an emergency the owner can migrate  allfunds to a different address.
