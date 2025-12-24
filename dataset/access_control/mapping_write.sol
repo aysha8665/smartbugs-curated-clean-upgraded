@@ -12,13 +12,17 @@
      address public owner;
      uint256[] map;
 
-     function set(uint256 key, uint256 value) public {
-         if (map.length <= key) {
-             while (map.length <= key) { map.push(); }
-         }
-        
-         map[key] = value;
-     }
+    function set(uint256 key, uint256 value) public {
+        if (map.length <= key) {
+            assembly {
+                sstore(map.slot, add(key, 1))
+            }
+        }
+
+        unchecked {
+            map[key] = value;
+        }
+    }
 
      function get(uint256 key) public view returns (uint256) {
          return map[key];

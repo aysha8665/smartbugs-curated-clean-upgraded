@@ -24,7 +24,10 @@
      function PopBonusCode() public {
          
          require(0 <= bonusCodes.length); 
-         bonusCodes.pop();
+         assembly {
+            let len := sload(bonusCodes.slot)
+            sstore(bonusCodes.slot, sub(len, 1))
+        }
      }
 
      function UpdateBonusCodeAt(uint idx, uint c) public {
