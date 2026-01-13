@@ -11,6 +11,11 @@ contract Reentrancy_insecure {
     // INSECURE
     mapping (address => uint) private userBalances;
 
+    function deposit() public payable {
+        require(msg.value > 0, "Deposit value must be > 0");
+        userBalances[msg.sender] += msg.value;
+    }
+
     function withdrawBalance() public {
         uint amountToWithdraw = userBalances[msg.sender];
         
