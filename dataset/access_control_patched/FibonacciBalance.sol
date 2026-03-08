@@ -1,0 +1,59 @@
+/*
+ * ======================
+ * ======================
+ * ======================
+ */
+
+//added pragma version
+pragma solidity ^0.8.0;
+
+contract FibonacciBalance {
+
+    address public fibonacciLibrary;
+    
+    uint public calculatedFibNumber;
+    
+    uint public start = 3;
+    uint public withdrawalCounter;
+    
+    bytes4 constant fibSig = bytes4(keccak256("setFibonacci(uint256)"));
+
+    
+    constructor(address _fibonacciLibrary) payable {
+        fibonacciLibrary = _fibonacciLibrary;
+    }
+
+    function withdraw() public {
+        withdrawalCounter += 1;
+        
+        
+        
+        (bool success, ) = address(fibonacciLibrary).delegatecall(abi.encodeWithSelector(fibSig, withdrawalCounter)); require(success);
+        payable(msg.sender).transfer(calculatedFibNumber * 1 ether);
+    }
+
+    
+    // Removed dangerous fallback that allowed arbitrary delegatecall
+}
+
+
+contract FibonacciLib {
+    
+    uint public start;
+    uint public calculatedFibNumber;
+
+    
+    function setStart(uint _start) public {
+        start = _start;
+    }
+
+    function setFibonacci(uint n) public {
+        calculatedFibNumber = fibonacci(n);
+    }
+
+    function fibonacci(uint n) internal returns (uint) {
+        if (n == 0) return start;
+        else if (n == 1) return start + 1;
+        else return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}
