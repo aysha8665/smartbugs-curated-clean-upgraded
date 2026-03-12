@@ -1,0 +1,27 @@
+/*
+ * =======================
+ * =======================
+ * =======================
+ */
+
+
+pragma solidity ^0.8.0;
+
+contract DOneFunc {
+
+    address[] listAddresses;
+
+    function ifillArray() public returns (bool){
+        if(listAddresses.length<1500) {
+            
+            for(uint i=0;i<350 && gasleft() > 50000;i++) {
+                listAddresses.push(msg.sender);
+            }
+            return true;
+
+        } else {
+            listAddresses = new address[](0);
+            return false;
+        }
+    }
+}

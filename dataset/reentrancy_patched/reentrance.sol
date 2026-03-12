@@ -1,0 +1,35 @@
+/*
+ * @source: https://ethernaut.zeppelin.solutions/level/0xf70706db003e94cfe4b5e27ffd891d5c81b39488
+ * @author: Alejandro Santander
+ * =======================
+ */
+
+pragma solidity ^0.8.0;
+
+contract Reentrance {
+
+  bool private _locked;
+  mapping(address => uint) public balances;
+
+  function donate(address _to) public payable {
+    balances[_to] += msg.value;
+  }
+
+  function balanceOf(address _who) public view returns (uint balance) {
+    return balances[_who];
+  }
+
+  function withdraw(uint _amount) public {
+    require(!_locked, "ReentrancyGuard: reentrant call");
+    _locked = true;
+    if(balances[msg.sender] >= _amount) {
+      balances[msg.sender] -= _amount;
+      (bool success, ) = msg.sender.call{value: _amount}(""); if(success){
+        _amount;
+      }
+    }
+    _locked = false;
+  }
+
+  receive() external payable {}
+}
