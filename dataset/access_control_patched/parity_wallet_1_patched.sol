@@ -118,6 +118,9 @@ contract WalletLibrary is WalletEvents {
   // constructor is given number of sigs required to do protected "onlymanyowners" transactions
   // as well as the selection of addresses capable of confirming them.
   bool private initialized;
+  constructor() {
+      initialized = true; 
+  }
   function initMultiowned(address[] memory _owners, uint _required) public {
     require(!initialized, "Already initialized");
     initialized = true;
@@ -227,19 +230,24 @@ contract WalletLibrary is WalletEvents {
     m_spentToday = 0;
   }
 
+  modifier onlyUninitialized() {
+    require(!initialized, "Already initialized");
+    _;
+  }
+
   // constructor - just pass on the owner array to the multiowned and
   // the limit to daylimit
   // ===========================
-  function initWallet(address[] memory _owners, uint _required, uint _daylimit) public {
+  function initWallet(address[] memory _owners, uint _required, uint _daylimit) public onlyUninitialized {
     initDaylimit(_daylimit);
     initMultiowned(_owners, _required);
   }
 
   // kills the contract sending everything to `_to`.
   function kill(address _to) onlymanyowners(keccak256(abi.encodePacked(msg.data))) external {
-    uint256 balance = address(this).balance;
-    (bool success, ) = payable(_to).call{value: balance}("");
-    require(success, "Transfer failed");
+    //uint256 balance = address(this).balance;
+    //(bool success, ) = payable(_to).call{value: balance}("");
+    //require(success, "Transfer failed");
   }
 
   // Outside-visible transact entry point. Executes transaction immediately if below daily spend limit.
