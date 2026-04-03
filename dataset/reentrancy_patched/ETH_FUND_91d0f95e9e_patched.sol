@@ -32,18 +32,19 @@ contract ETH_FUND
         }
     }
     
-    function CashOut(uint _am)
-    public
-    payable
-    {
-        if(_am<=balances[msg.sender]&&block.number>lastBlock)
-        {
+    function CashOut(uint _am) public payable {
+        if(_am<=balances[msg.sender]&&block.number>lastBlock) {
             
-            balances[msg.sender]-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                TransferLog.AddMessage(msg.sender,_am,"CashOut");
-            }
+            // 1. Effect: Deduct balance first to prevent reentrancy
+            balances[msg.sender]-=_am; 
+            
+            // 2. Interaction: Execute the external call
+            (bool success, ) = msg.sender.call{value: _am}(""); 
+            
+            // 3. Validation: Revert the entire state if the transfer fails
+            require(success, "Transfer failed"); 
+            
+            TransferLog.AddMessage(msg.sender,_am,"CashOut");
         }
     }
     
