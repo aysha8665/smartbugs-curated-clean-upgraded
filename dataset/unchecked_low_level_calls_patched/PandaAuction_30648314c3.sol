@@ -1492,7 +1492,8 @@ contract ClockAuction is Pausable, ClockAuctionBase {
         );
         // We are using this boolean method to make sure that even if one fails it will still work
         
-        require(bool res = payable(nftAddress).send(address(this).balance));
+        bool res = payable(nftAddress).send(address(this).balance);
+        require(res, "Transfer failed");
     }
 
     /// @dev Creates and begins a new auction.
