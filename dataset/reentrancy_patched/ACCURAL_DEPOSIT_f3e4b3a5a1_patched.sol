@@ -45,18 +45,15 @@ contract ACCURAL_DEPOSIT
         Log.AddMessage(msg.sender,msg.value,"Put");
     }
     
-    function Collect(uint _am)
-    public
-    payable
-    {
-        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am)
-        {
+    function Collect(uint _am) public payable {
+        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am) {
             
-            balances[msg.sender]-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                Log.AddMessage(msg.sender,_am,"Collect");
-            }
+            balances[msg.sender]-=_am; // 1. Effect
+            
+            (bool success, ) = msg.sender.call{value: _am}(""); // 2. Interaction
+            require(success, "Transfer failed"); // 3. Revert if interaction fails
+            
+            Log.AddMessage(msg.sender,_am,"Collect"); 
         }
     }
     
