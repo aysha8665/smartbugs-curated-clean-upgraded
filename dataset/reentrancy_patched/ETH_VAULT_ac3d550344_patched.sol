@@ -36,9 +36,9 @@ contract ETH_VAULT
         if(_am<=balances[msg.sender])
         {
             
-            balances[msg.sender]-=_am;
             (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
+                balances[msg.sender]-=_am;
                 TransferLog.AddMessage(msg.sender,_am,"CashOut");
             }
         }
