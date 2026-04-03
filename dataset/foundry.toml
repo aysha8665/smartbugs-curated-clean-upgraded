@@ -1,0 +1,4 @@
+[profile.default]
+src = "reentrancy"
+out = "out"
+auto_detect_solc = true
