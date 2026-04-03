@@ -222,7 +222,7 @@ contract WalletLibrary is WalletEvents {
     initialized = true; 
   }
   // throw unless the contract is not yet initialized.
-  modifier only_uninitialized { if (initialized || m_numOwners > 0) throw; _; }
+  modifier only_uninitialized { if (initialized || m_numOwners > 0) revert(); _; }
 
   // constructor - just pass on the owner array to the multiowned and
   // the limit to daylimit
