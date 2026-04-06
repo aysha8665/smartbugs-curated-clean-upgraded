@@ -48,10 +48,8 @@ contract TokenBank is Token
     uint public MinDeposit;
     mapping (address => uint) public Holders;
     
-     ///Constructor
-    function initTokenBank()
-    public
-    {
+    // 1. Properly secure the initialization
+    constructor() {
         owner = msg.sender;
         MinDeposit = 1 ether;
     }
