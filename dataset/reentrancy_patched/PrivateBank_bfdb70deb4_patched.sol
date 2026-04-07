@@ -6,31 +6,17 @@
 
 pragma solidity ^0.8.0;
 
-contract PrivateDeposit
+contract PrivateBank
 {
     mapping (address => uint) public balances;
-        
+    
     uint public MinDeposit = 1 ether;
-    address public owner;
     
     Log TransferLog;
     
-    modifier onlyOwner() {
-        require(tx.origin == owner);
-        _;
-    }    
-    
-    constructor() payable {
-        owner = msg.sender;
-        TransferLog = new Log();
+    constructor(address _log) payable {
+        TransferLog = Log(_log);
     }
-    
-    
-    
-    function setLog(address _lib) onlyOwner
-    public {
-        TransferLog = Log(_lib);
-    }    
     
     function Deposit()
     public
@@ -43,16 +29,20 @@ contract PrivateDeposit
         }
     }
     
-    function CashOut(uint _am)
-    public {
-        if(_am<=balances[msg.sender])
-        {            
+    function CashOut(uint _am) public {
+        if(_am<=balances[msg.sender]) {            
             
+            // 1. EFFECT (State updated first)
             balances[msg.sender]-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                TransferLog.AddMessage(msg.sender,_am,"CashOut");
-            }
+            
+            // 2. INTERACTION (External call made safely)
+            (bool success, ) = msg.sender.call{value: _am}(""); 
+            
+            // 3. DEFENSE (Revert state if transfer fails)
+            require(success, "Transfer failed");
+            
+            // 4. LOGGING
+            TransferLog.AddMessage(msg.sender,_am,"CashOut");
         }
     }
     
