@@ -1,46 +1,48 @@
 /*
  * @source: etherscan.io 
  * @author: -
- *=======================
+ * =======================
  */
- 
+
 pragma solidity ^0.8.0;
 
-contract ETH_VAULT
+contract PrivateBank
 {
     mapping (address => uint) public balances;
+        
+    uint public MinDeposit = 1 ether;
     
     Log TransferLog;
     
-    uint public MinDeposit = 1 ether;
-    
-    constructor(address _log) payable {
-        TransferLog = Log(_log);
+    constructor(address _lib) payable {
+        TransferLog = Log(_lib);
     }
     
     function Deposit()
     public
     payable
     {
-        if(msg.value > MinDeposit)
+        if(msg.value >= MinDeposit)
         {
             balances[msg.sender]+=msg.value;
             TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
         }
     }
     
-    function CashOut(uint _am)
-    public
-    payable
-    {
-        if(_am<=balances[msg.sender])
-        {
+    function CashOut(uint _am) public {
+        if(_am<=balances[msg.sender]) {            
             
+            // 1. EFFECT
             balances[msg.sender]-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                TransferLog.AddMessage(msg.sender,_am,"CashOut");
-            }
+            
+            // 2. INTERACTION
+            (bool success, ) = msg.sender.call{value: _am}(""); 
+            
+            // 3. DEFENSE (Revert state if transfer fails)
+            require(success, "Transfer failed");
+            
+            // 4. LOGGING
+            TransferLog.AddMessage(msg.sender,_am,"CashOut");
         }
     }
     

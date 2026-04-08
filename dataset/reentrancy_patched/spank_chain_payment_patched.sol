@@ -416,23 +416,30 @@
      }
 
      function LCOpenTimeout(bytes32 _lcID) public {
-         require(msg.sender == Channels[_lcID].partyAddresses[0] && Channels[_lcID].isOpen == false);
-         require(block.timestamp > Channels[_lcID].LCopenTimeout);
+        require(msg.sender == Channels[_lcID].partyAddresses[0] && Channels[_lcID].isOpen == false);
+        require(block.timestamp > Channels[_lcID].LCopenTimeout);
 
-         if(Channels[_lcID].initialDeposit[0] != 0) {
-             
-             payable(Channels[_lcID].partyAddresses[0]).transfer(Channels[_lcID].ethBalances[0]);
-         }
-         if(Channels[_lcID].initialDeposit[1] != 0) {
-             
-             require(Channels[_lcID].token.transfer(Channels[_lcID].partyAddresses[0], Channels[_lcID].erc20Balances[0]),"CreateChannel: token transfer failure");
-         }
+        // 1. CHECKS & CACHE (Save necessary data to memory before deleting state)
+        uint256 ethBal = Channels[_lcID].ethBalances[0];
+        uint256 tokenBal = Channels[_lcID].erc20Balances[0];
+        uint256 initEthDeposit = Channels[_lcID].initialDeposit[0];
+        uint256 initTokenDeposit = Channels[_lcID].initialDeposit[1];
+        address payable partyA = payable(Channels[_lcID].partyAddresses[0]);
+        HumanStandardToken token = Channels[_lcID].token;
 
-         emit DidLCClose(_lcID, 0, Channels[_lcID].ethBalances[0], Channels[_lcID].erc20Balances[0], 0, 0);
+        // 2. EFFECTS (Delete the state BEFORE external interactions)
+        delete Channels[_lcID];
 
-         // only safe to delete since no action was taken on this channel
-         delete Channels[_lcID];
-     }
+        // 3. INTERACTIONS (Safe to transfer now)
+        if(initEthDeposit != 0) {
+            partyA.transfer(ethBal);
+        }
+        if(initTokenDeposit != 0) {
+            require(token.transfer(partyA, tokenBal),"CreateChannel: token transfer failure");
+        }
+
+        emit DidLCClose(_lcID, 0, ethBal, tokenBal, 0, 0);
+    }
 
      function joinChannel(bytes32 _lcID, uint256[2] memory _balances) public payable {
          // require the channel is not open yet
@@ -748,7 +755,7 @@
 
      // todo: allow ethier lc.end-user to nullify the settled LC state and return to off-chain
      function byzantineCloseChannel(bytes32 _lcID) public {
-         Channel storage channel = Channels[_lcID];
+        Channel storage channel = Channels[_lcID];
 
          // check settlement flag
          require(channel.isOpen, "Channel is not open");
@@ -778,36 +785,42 @@
          }
 
          // reentrancy
-         uint256 ethbalanceA = channel.ethBalances[0];
-         uint256 ethbalanceI = channel.ethBalances[1];
-         uint256 tokenbalanceA = channel.erc20Balances[0];
-         uint256 tokenbalanceI = channel.erc20Balances[1];
+         // Cache variables for transfers and logging
+        uint256 ethbalanceA = channel.ethBalances[0];
+        uint256 ethbalanceI = channel.ethBalances[1];
+        uint256 tokenbalanceA = channel.erc20Balances[0];
+        uint256 tokenbalanceI = channel.erc20Balances[1];
+        address payable partyA = payable(channel.partyAddresses[0]);
+        address payable partyI = payable(channel.partyAddresses[1]);
+        HumanStandardToken token = channel.token;
+        uint256 sequence = channel.sequence;
 
-         channel.ethBalances[0] = 0;
-         channel.ethBalances[1] = 0;
-         channel.erc20Balances[0] = 0;
-         channel.erc20Balances[1] = 0;
+        // 1. EFFECTS (State updates hoisted above interactions)
+        channel.ethBalances[0] = 0;
+        channel.ethBalances[1] = 0;
+        channel.erc20Balances[0] = 0;
+        channel.erc20Balances[1] = 0;
+        channel.isOpen = false;
+        numChannels--;
 
-         if(ethbalanceA != 0 || ethbalanceI != 0) {
-             payable(channel.partyAddresses[0]).transfer(ethbalanceA);
-             payable(channel.partyAddresses[1]).transfer(ethbalanceI);
-         }
+        // 2. INTERACTIONS (Transfers executed safely)
+        if(ethbalanceA != 0 || ethbalanceI != 0) {
+            partyA.transfer(ethbalanceA);
+            partyI.transfer(ethbalanceI);
+        }
 
-         if(tokenbalanceA != 0 || tokenbalanceI != 0) {
-             require(
-                 channel.token.transfer(channel.partyAddresses[0], tokenbalanceA),
-                 "byzantineCloseChannel: token transfer failure"
-             );
-             require(
-                 channel.token.transfer(channel.partyAddresses[1], tokenbalanceI),
-                 "byzantineCloseChannel: token transfer failure"
-             );
-         }
+        if(tokenbalanceA != 0 || tokenbalanceI != 0) {
+            require(
+                token.transfer(partyA, tokenbalanceA),
+                "byzantineCloseChannel: token transfer failure"
+            );
+            require(
+                token.transfer(partyI, tokenbalanceI),
+                "byzantineCloseChannel: token transfer failure"
+            );
+        }
 
-         channel.isOpen = false;
-         numChannels--;
-
-         emit DidLCClose(_lcID, channel.sequence, ethbalanceA, ethbalanceI, tokenbalanceA, tokenbalanceI);
+        emit DidLCClose(_lcID, sequence, ethbalanceA, ethbalanceI, tokenbalanceA, tokenbalanceI);
      }
 
      function _isContained(bytes32 _hash, bytes memory _proof, bytes32 _root) internal pure returns (bool) {

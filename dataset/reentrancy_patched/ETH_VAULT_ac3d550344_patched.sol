@@ -1,42 +1,28 @@
 /*
  * @source: etherscan.io 
  * @author: -
- * =======================
+ *=======================
  */
-
+ 
 pragma solidity ^0.8.0;
 
-contract PrivateDeposit
+contract ETH_VAULT
 {
     mapping (address => uint) public balances;
-        
-    uint public MinDeposit = 1 ether;
-    address public owner;
     
     Log TransferLog;
     
-    modifier onlyOwner() {
-        require(tx.origin == owner);
-        _;
-    }    
+    uint public MinDeposit = 1 ether;
     
-    constructor() payable {
-        owner = msg.sender;
-        TransferLog = new Log();
+    constructor(address _log) payable {
+        TransferLog = Log(_log);
     }
-    
-    
-    
-    function setLog(address _lib) onlyOwner
-    public {
-        TransferLog = Log(_lib);
-    }    
     
     function Deposit()
     public
     payable
     {
-        if(msg.value >= MinDeposit)
+        if(msg.value > MinDeposit)
         {
             balances[msg.sender]+=msg.value;
             TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
@@ -44,13 +30,15 @@ contract PrivateDeposit
     }
     
     function CashOut(uint _am)
-    public {
+    public
+    payable
+    {
         if(_am<=balances[msg.sender])
-        {            
+        {
             
-            balances[msg.sender]-=_am;
             (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
+                balances[msg.sender]-=_am;
                 TransferLog.AddMessage(msg.sender,_am,"CashOut");
             }
         }

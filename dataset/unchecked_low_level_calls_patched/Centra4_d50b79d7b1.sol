@@ -20,8 +20,8 @@ contract Centra4 {
 			
 		(bool success, ) = contract_address.call(abi.encodeWithSignature("register(string)", "CentraToken"));
 		require(success);
-		(bool success, ) = contract_address.call(abi.encodeWithSignature("transfer(address,uint256)", c2, k)); if(!success) return false;
-
+		// We reuse the existing 'success' variable here instead of redeclaring it
+		(success, ) = contract_address.call(abi.encodeWithSignature("transfer(address,uint256)", c2, k)); if(!success) return false;
 		require(success);
 		return true;
 	}

@@ -6,7 +6,7 @@
 
 pragma solidity ^0.8.0;
 
-contract WALLET
+contract U_BANK
 {
     function Put(uint _unlockTime)
     public
@@ -18,19 +18,21 @@ contract WALLET
         LogFile.AddMessage(msg.sender,msg.value,"Put");
     }
 
-    function Collect(uint _am)
-    public
-    payable
-    {
+    function Collect(uint _am) public payable {
         Holder storage acc = Acc[msg.sender];
-        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
-        {
+        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime) {
             
+            // 1. EFFECT (State updated first)
             acc.balance-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                LogFile.AddMessage(msg.sender,_am,"Collect");
-            }
+            
+            // 2. INTERACTION (External call made safely)
+            (bool success, ) = msg.sender.call{value: _am}(""); 
+            
+            // 3. DEFENSE (Revert state if transfer fails)
+            require(success, "Transfer failed");
+            
+            // 4. LOGGING
+            LogFile.AddMessage(msg.sender,_am,"Collect");
         }
     }
 
@@ -48,7 +50,7 @@ contract WALLET
 
     Log LogFile;
 
-    uint public MinSum = 1 ether;    
+    uint public MinSum = 2 ether;    
 
     constructor(address log) payable {
         LogFile = Log(log);

@@ -6,41 +6,44 @@
 
 pragma solidity ^0.8.0;
 
-contract PrivateBank
+contract ETH_VAULT
 {
     mapping (address => uint) public balances;
-        
+    
     uint public MinDeposit = 1 ether;
     
     Log TransferLog;
     
-    constructor(address _lib) payable {
-        TransferLog = Log(_lib);
+    constructor(address _log) payable {
+        TransferLog = Log(_log);
     }
     
     function Deposit()
     public
     payable
     {
-        if(msg.value >= MinDeposit)
+        if(msg.value > MinDeposit)
         {
             balances[msg.sender]+=msg.value;
             TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
         }
     }
-    
-    function CashOut(uint _am)
-    public {
-        if(_am<=balances[msg.sender])
-        {            
-            
-            balances[msg.sender]-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                TransferLog.AddMessage(msg.sender,_am,"CashOut");
-            }
-        }
+
+    function CashOut(uint _am) public payable {
+    if(_am <= balances[msg.sender]) {
+        // 1. Effect: Update state first
+        balances[msg.sender] -= _am;
+        
+        // 2. Interaction: Perform the external call
+        (bool success, ) = msg.sender.call{value: _am}("");
+        
+        // 3. Validation: Revert the entire transaction if the call fails
+        require(success, "Transfer failed."); 
+        
+        // 4. Log: Only executes if the require statement passes
+        TransferLog.AddMessage(msg.sender, _am, "CashOut");
     }
+}
     
     receive() external payable {}    
     

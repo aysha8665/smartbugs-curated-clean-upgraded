@@ -1,4 +1,4 @@
 [profile.default]
-src = "reentrancy"
+src = "dataset"
 out = "out"
 auto_detect_solc = true

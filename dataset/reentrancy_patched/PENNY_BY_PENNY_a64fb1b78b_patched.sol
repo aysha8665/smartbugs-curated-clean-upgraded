@@ -6,13 +6,19 @@
 
 pragma solidity ^0.8.0;
 
-contract PERSONAL_BANK
+contract PENNY_BY_PENNY  
 {
-    mapping (address=>uint256) public balances;   
-   
-    uint public MinSum = 1 ether;
+    struct Holder   
+    {
+        uint unlockTime;
+        uint balance;
+    }
     
-    LogFile Log = LogFile(0x0486cF65A2F2F3A392CBEa398AFB7F5f0B72FF46);
+    mapping (address => Holder) public Acc;
+    
+    uint public MinSum;
+    
+    LogFile Log;
     
     bool intitalized;
     
@@ -36,35 +42,39 @@ contract PERSONAL_BANK
         intitalized = true;
     }
     
-    function Deposit()
+    function Put(uint _lockTime)
     public
     payable
     {
-        balances[msg.sender]+= msg.value;
+        Holder storage acc = Acc[msg.sender];
+        acc.balance += msg.value;
+        if(block.timestamp+_lockTime>acc.unlockTime)acc.unlockTime=block.timestamp+_lockTime;
         Log.AddMessage(msg.sender,msg.value,"Put");
     }
     
-    function Collect(uint _am)
-    public
-    payable
-    {
-        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am)
+    function Collect(uint _am) public payable {
+        Holder storage acc = Acc[msg.sender];
+        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
         {
+            // 1. EFFECT
+            acc.balance-=_am;
             
-            balances[msg.sender]-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                Log.AddMessage(msg.sender,_am,"Collect");
-            }
+            // 2. INTERACTION
+            (bool success, ) = msg.sender.call{value: _am}(""); 
+            
+            // 3. DEFENSE (Revert the state if the transfer fails)
+            require(success, "Transfer failed");
+            
+            // 4. LOGGING
+            Log.AddMessage(msg.sender,_am,"Collect");
         }
     }
     
     receive() external payable {
-        Deposit();
+        Put(0);
     }
     
 }
-
 
 
 contract LogFile

@@ -52,19 +52,23 @@ contract MONEY_BOX
         LogFile.AddMessage(msg.sender,msg.value,"Put");
     }
     
-    function Collect(uint _am)
-    public
-    payable
-    {
+    function Collect(uint _am) public payable {
         Holder storage acc = Acc[msg.sender];
-        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime)
-        {
+    
+        // 1. Checks
+        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime) {
             
-            acc.balance-=_am;
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                LogFile.AddMessage(msg.sender,_am,"Collect");
-            }
+            // 2. Effects
+            acc.balance -= _am;
+            
+            // 3. Interactions
+            (bool success, ) = msg.sender.call{value: _am}(""); 
+            
+            // 4. Validation (Crucial addition)
+            require(success, "Transfer failed."); 
+            
+            // 5. Logging (Only reachable if the transfer succeeded)
+            LogFile.AddMessage(msg.sender, _am, "Collect");
         }
     }
     

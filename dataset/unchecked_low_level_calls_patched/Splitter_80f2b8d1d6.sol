@@ -64,20 +64,22 @@ contract Splitter{
 
     function fundPuppets() public payable {
         require(msg.sender == owner);
-    	_share = SafeMath.div(msg.value, 4);
+        _share = SafeMath.div(msg.value, 4);
 		
+        // First time: declare bool success
         (bool success, ) = extra[0].call{value: _share, gas: 800000}("");
         require(success);
-		
-        (bool success, ) = extra[1].call{value: _share, gas: 800000}("");
+        
+        // Next 3 times: reuse success (no 'bool' keyword)
+        (success, ) = extra[1].call{value: _share, gas: 800000}("");
         require(success);
 		
-        (bool success, ) = extra[2].call{value: _share, gas: 800000}("");
+        (success, ) = extra[2].call{value: _share, gas: 800000}("");
         require(success);
-		
-        (bool success, ) = extra[3].call{value: _share, gas: 800000}("");
+
+        (success, ) = extra[3].call{value: _share, gas: 800000}("");
         require(success);
-        }
+    }
         
 //fallback function
 

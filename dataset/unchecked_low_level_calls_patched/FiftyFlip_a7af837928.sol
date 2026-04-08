@@ -316,7 +316,8 @@ contract FiftyFlip {
 
     // Helper routine to process the payment.
     function sendFunds(address paidUser, uint amount) private returns (bool){
-        require(bool success = payable(paidUser).send(amount));
+        bool success = payable(paidUser).send(amount);
+        require(success, "Payment failed");
         if (success) {
             emit Payment(paidUser, amount);
         } else {
