@@ -28,7 +28,10 @@ contract W_WALLET
             
             (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
-                acc.balance-=_am;
+                unchecked {     
+                    acc.balance-=_am;
+                }
+
                 LogFile.AddMessage(msg.sender,_am,"Collect");
             }
         }

@@ -14,7 +14,9 @@ contract Reentrancy_cross_function {
     function transfer(address to, uint amount) public {
         if (userBalances[msg.sender] >= amount) {
             userBalances[to] += amount;
-            userBalances[msg.sender] -= amount;
+            unchecked {
+                userBalances[msg.sender] -= amount;
+            }
         }
     }
 

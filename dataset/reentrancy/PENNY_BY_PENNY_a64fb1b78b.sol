@@ -62,7 +62,9 @@ contract PENNY_BY_PENNY
             
             (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
-                acc.balance-=_am;
+                unchecked {     
+                    acc.balance-=_am;
+                }
                 Log.AddMessage(msg.sender,_am,"Collect");
             }
         }
