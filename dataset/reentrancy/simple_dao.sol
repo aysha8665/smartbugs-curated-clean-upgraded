@@ -17,7 +17,9 @@ contract SimpleDAO {
     if (credit[msg.sender]>= amount) {
       
       (bool res, ) = msg.sender.call{value: amount}("");
-      credit[msg.sender]-=amount;
+      unchecked {
+        credit[msg.sender]-=amount;
+      }
     }
   }
 

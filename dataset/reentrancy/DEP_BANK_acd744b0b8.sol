@@ -53,7 +53,10 @@ contract DEP_BANK
             
             (bool success, ) = msg.sender.call{value: _am}(""); if(success)
             {
-                balances[msg.sender]-=_am;
+                unchecked
+                {
+                    balances[msg.sender]-=_am;
+                }
                 Log.AddMessage(msg.sender,_am,"Collect");
             }
         }
