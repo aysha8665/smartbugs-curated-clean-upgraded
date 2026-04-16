@@ -27,9 +27,14 @@
 
      function withdraw(uint256 amount) public {
          
-         require(amount <= balances[msg.sender]);
-         payable(msg.sender).transfer(amount);
-            balances[msg.sender] -= amount;
+         // 1. Checks: amount must be LESS THAN or EQUAL TO the user's balance
+        require(amount <= balances[msg.sender], "Insufficient balance");
+        
+        // 2. Effects: update state before the external call
+        balances[msg.sender] -= amount;
+        
+        // 3. Interactions: transfer the funds safely
+        payable(msg.sender).transfer(amount);
      }
 
      // In an emergency the owner can migrate  allfunds to a different address.
