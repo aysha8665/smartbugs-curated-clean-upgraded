@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
 
 contract FibonacciBalance {
 
-    address public fibonacciLibrary;
+    address public immutable fibonacciLibrary;
     
     uint public calculatedFibNumber;
     
@@ -25,10 +25,9 @@ contract FibonacciBalance {
 
     function withdraw() public {
         withdrawalCounter += 1;
-        
-        
-        
-        (bool success, ) = address(fibonacciLibrary).delegatecall(abi.encodeWithSelector(fibSig, withdrawalCounter)); require(success);
+        (bool success, ) = fibonacciLibrary.delegatecall(abi.encodeWithSelector(fibSig, withdrawalCounter)); 
+        require(success, "Delegatecall failed");
+
         payable(msg.sender).transfer(calculatedFibNumber * 1 ether);
     }
 
