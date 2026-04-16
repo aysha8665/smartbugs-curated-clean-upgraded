@@ -110,6 +110,10 @@ contract ERC20 {
   function approve(address spender, uint256 value) public returns (bool) {
     require(spender != address(0));
     
+    // Mitigate the front-running race condition.
+    // To change an active allowance, it must first be set to zero.
+    require((value == 0) || (_allowed[msg.sender][spender] == 0), "Reset allowance to zero first");
+
     _allowed[msg.sender][spender] = value;
     emit Approval(msg.sender, spender, value);
     return true;
