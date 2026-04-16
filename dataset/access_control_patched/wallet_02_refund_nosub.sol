@@ -32,7 +32,8 @@
      }
 
      function refund() public {
-         
+         require(creator == msg.sender);
+
          payable(msg.sender).transfer(balances[msg.sender]);
      }
 
