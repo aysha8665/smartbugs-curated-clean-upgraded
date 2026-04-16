@@ -486,3 +486,5 @@ contract Wallet is WalletEvents {
   // list of owners
   uint[256] m_owners;
 }
+
+

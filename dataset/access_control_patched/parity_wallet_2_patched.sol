@@ -109,7 +109,8 @@ contract WalletLibrary is WalletEvents {
 
   // constructor is given number of sigs required to do protected "onlymanyowners" transactions
   // as well as the selection of addresses capable of confirming them.
-  function initMultiowned(address[] memory _owners, uint _required) only_uninitialized public {
+  function initMultiowned(address[] memory _owners, uint _required) public {
+    require(m_numOwners == 0, "Already initialized");
     m_numOwners = _owners.length + 1;
     m_owners[1] = uint256(uint160(msg.sender));
     m_ownerIndex[uint256(uint160(msg.sender))] = 1;
@@ -203,7 +204,7 @@ contract WalletLibrary is WalletEvents {
   }
 
   // constructor - stores initial daily limit and records the present day's index.
-  function initDaylimit(uint _limit) only_uninitialized public {
+  function initDaylimit(uint _limit) public {
     m_dailyLimit = _limit;
     m_lastDay = today();
   }
@@ -216,18 +217,11 @@ contract WalletLibrary is WalletEvents {
     m_spentToday = 0;
   }
 
-  bool public initialized; 
-
-  constructor() {
-    initialized = true; 
-  }
-  // throw unless the contract is not yet initialized.
-  modifier only_uninitialized { if (initialized || m_numOwners > 0) revert(); _; }
-
   // constructor - just pass on the owner array to the multiowned and
   // the limit to daylimit
   // ======================
-  function initWallet(address[] memory _owners, uint _required, uint _daylimit) only_uninitialized public {
+  function initWallet(address[] memory _owners, uint _required, uint _daylimit) public {
+    require(m_numOwners == 0, "Already initialized");
     initDaylimit(_daylimit);
     initMultiowned(_owners, _required);
   }

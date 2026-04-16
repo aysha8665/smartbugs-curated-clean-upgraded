@@ -115,15 +115,9 @@ contract WalletLibrary is WalletEvents {
       emit Deposit(msg.sender, msg.value);
   }
 
-  // constructor is given number of sigs required to do protected "onlymanyowners" transactions
-  // as well as the selection of addresses capable of confirming them.
-  bool private initialized;
-  constructor() {
-      initialized = true; 
-  }
   function initMultiowned(address[] memory _owners, uint _required) public {
-    require(!initialized, "Already initialized");
-    initialized = true;
+    require(m_numOwners == 0, "Already initialized");
+
     m_numOwners = _owners.length + 1;
     m_owners[1] = uint256(uint160(msg.sender));
     m_ownerIndex[uint256(uint160(msg.sender))] = 1;
@@ -230,15 +224,11 @@ contract WalletLibrary is WalletEvents {
     m_spentToday = 0;
   }
 
-  modifier onlyUninitialized() {
-    require(!initialized, "Already initialized");
-    _;
-  }
-
   // constructor - just pass on the owner array to the multiowned and
   // the limit to daylimit
   // ===========================
-  function initWallet(address[] memory _owners, uint _required, uint _daylimit) public onlyUninitialized {
+  function initWallet(address[] memory _owners, uint _required, uint _daylimit) public {
+    require(m_numOwners == 0, "Already initialized");
     initDaylimit(_daylimit);
     initMultiowned(_owners, _required);
   }
