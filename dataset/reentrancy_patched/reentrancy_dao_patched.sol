@@ -19,7 +19,7 @@ contract ReentrancyDAO {
         credit[msg.sender] = 0;
         balance -= oCredit;
         (bool callResult, ) = msg.sender.call{value: oCredit}("");
-        require (callResult);
+        require (callResult, "Transfer failed");
         _locked = false;
     }
 

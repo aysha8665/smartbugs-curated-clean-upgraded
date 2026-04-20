@@ -24,7 +24,7 @@ contract ETH_FUND
     public
     payable
     {
-        require(msg.value > MinDeposit);
+        require(msg.value > MinDeposit, "Deposit must be greater than minimum"); // 1. Check
 
         balances[msg.sender]+=msg.value;
         TransferLog.AddMessage(msg.sender,msg.value,"Deposit");

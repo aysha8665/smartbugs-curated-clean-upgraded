@@ -22,11 +22,9 @@ contract PrivateBank
     public
     payable
     {
-        if(msg.value >= MinDeposit)
-        {
-            balances[msg.sender]+=msg.value;
-            TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
-        }
+        require(msg.value >= MinDeposit, "Deposit must be greater than minimum");
+        balances[msg.sender]+=msg.value;
+        TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
     }
     
     function CashOut(uint _am) public {

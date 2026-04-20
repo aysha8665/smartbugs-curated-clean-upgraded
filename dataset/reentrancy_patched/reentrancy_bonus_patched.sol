@@ -17,13 +17,13 @@ contract Reentrancy_bonus{
         uint amountToWithdraw = rewardsForA[recipient];
         rewardsForA[recipient] = 0;
         (bool success, ) = recipient.call{value: amountToWithdraw}("");
-        require(success);
+        require(success, "Transfer failed");
     }
 
     function getFirstWithdrawalBonus(address recipient) public {
         require(!_locked, "ReentrancyGuard: reentrant call");
         _locked = true;
-        require(!claimedBonus[recipient]); 
+        require(!claimedBonus[recipient], "Bonus already claimed");
 
         rewardsForA[recipient] += 100;
         claimedBonus[recipient] = true;

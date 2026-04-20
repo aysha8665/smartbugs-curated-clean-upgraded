@@ -48,7 +48,8 @@ contract PENNY_BY_PENNY
     {
         Holder storage acc = Acc[msg.sender];
         acc.balance += msg.value;
-        if(block.timestamp+_lockTime>acc.unlockTime)acc.unlockTime=block.timestamp+_lockTime;
+        require(block.timestamp+_lockTime>acc.unlockTime, "Lock time is not valid");
+        acc.unlockTime=block.timestamp+_lockTime;
         Log.AddMessage(msg.sender,msg.value,"Put");
     }
     

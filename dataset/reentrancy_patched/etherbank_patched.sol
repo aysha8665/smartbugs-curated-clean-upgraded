@@ -22,6 +22,7 @@ contract EtherBank{
 		uint amountToWithdraw = userBalances[msg.sender];
 		userBalances[msg.sender] = 0;
 		(bool success, ) = msg.sender.call{value: amountToWithdraw}(""); if (!success) { revert(); }
+		require(success, "Transfer failed"); 
 		_locked = false;
 	}    
 }

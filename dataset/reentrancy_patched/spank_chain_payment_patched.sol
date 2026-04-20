@@ -138,7 +138,7 @@
      // @ref https://github.com/ethereum/go-ethereum/issues/3731#issuecomment-293866868
      function toEthereumSignedMessage(string memory _msg) public pure returns (bytes32) {
          uint len = bytes(_msg).length;
-         require(len > 0);
+         require(len > 0, "Message must be non empty");
          bytes memory prefix = "\x19Ethereum Signed Message:\n";
          return keccak256(abi.encodePacked(prefix, uintToString(len), _msg));
      }
@@ -166,9 +166,9 @@
      // @thanks https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
      function substring(string memory _str, uint _startIndex, uint _endIndex) public pure returns(string memory) {
          bytes memory strBytes = bytes(_str);
-         require(_startIndex <= _endIndex);
-         require(_startIndex >= 0);
-         require(_endIndex <= strBytes.length);
+         require(_startIndex <= _endIndex, "Start index must be less than or equal to end index");
+         require(_startIndex >= 0, "Start index must be a positive integer");
+         require(_endIndex <= strBytes.length, "End index must be within the bounds of the string");
 
          bytes memory result = new bytes(_endIndex - _startIndex);
          for (uint i = _startIndex; i < _endIndex; i++) {
@@ -184,7 +184,7 @@
          //If your token leaves out totalSupply and can issue more tokens as time goes on, you need to check if it doesn't wrap.
          //Replace the if with this one instead.
          //require(balances[msg.sender] >= _value && balances[_to] + _value > balances[_to]);
-         require(balances[msg.sender] >= _value);
+         require(balances[msg.sender] >= _value, "Not enough balance");
          balances[msg.sender] -= _value;
          balances[_to] += _value;
          emit Transfer(msg.sender, _to, _value);
@@ -194,7 +194,8 @@
      function transferFrom(address _from, address _to, uint256 _value) public virtual override returns (bool success) {
          //same as above. Replace this line with the following if you want to protect against wrapping uints.
          //require(balances[_from] >= _value && allowed[_from][msg.sender] >= _value && balances[_to] + _value > balances[_to]);
-         require(balances[_from] >= _value && allowed[_from][msg.sender] >= _value);
+         require(balances[_from] >= _value, "Not enough balance");
+         require(allowed[_from][msg.sender] >= _value, "Not enough allowance");
          balances[_to] += _value;
          balances[_from] -= _value;
          allowed[_from][msg.sender] -= _value;
@@ -254,7 +255,8 @@
          //call the receiveApproval function on the contract you want to be notified. This crafts the function signature manually so one doesn't have to include a contract in here just for this.
          //receiveApproval(address _from, uint256 _value, address _tokenContract, bytes memory _extraData)
          //it is assumed that when does this that the call *should* succeed, otherwise one would use vanilla approve instead.
-         (bool callSuccess, ) = _spender.call(abi.encodeWithSignature("receiveApproval(address,uint256,address,bytes)", msg.sender, _value, address(this), _extraData)); require(callSuccess);
+         (bool callSuccess, ) = _spender.call(abi.encodeWithSignature("receiveApproval(address,uint256,address,bytes)", msg.sender, _value, address(this), _extraData)); 
+         require(callSuccess, "Approval call failed");
          return true;
      }
  }
@@ -416,8 +418,8 @@
      }
 
      function LCOpenTimeout(bytes32 _lcID) public {
-        require(msg.sender == Channels[_lcID].partyAddresses[0] && Channels[_lcID].isOpen == false);
-        require(block.timestamp > Channels[_lcID].LCopenTimeout);
+        require(msg.sender == Channels[_lcID].partyAddresses[0] && Channels[_lcID].isOpen == false, "Only partyA can call LCOpenTimeout and channel must not be open");
+        require(block.timestamp > Channels[_lcID].LCopenTimeout,    "LC open timeout has not expired yet");
 
         // 1. CHECKS & CACHE (Save necessary data to memory before deleting state)
         uint256 ethBal = Channels[_lcID].ethBalances[0];
@@ -443,8 +445,8 @@
 
      function joinChannel(bytes32 _lcID, uint256[2] memory _balances) public payable {
          // require the channel is not open yet
-         require(Channels[_lcID].isOpen == false);
-         require(msg.sender == Channels[_lcID].partyAddresses[1]);
+         require(Channels[_lcID].isOpen == false, "Channel is already open, cannot join");
+         require(msg.sender == Channels[_lcID].partyAddresses[1], "Only partyI can join the channel");
 
          if(_balances[0] != 0) {
              require(msg.value == _balances[0], "state balance does not match sent value");
@@ -469,7 +471,7 @@
      // TODO check this for attack vectors
      function deposit(bytes32 _lcID, address recipient, uint256 _balance, bool isToken) public payable {
          require(Channels[_lcID].isOpen == true, "Tried adding funds to a closed channel");
-         require(recipient == Channels[_lcID].partyAddresses[0] || recipient == Channels[_lcID].partyAddresses[1]);
+         require(recipient == Channels[_lcID].partyAddresses[0] || recipient == Channels[_lcID].partyAddresses[1],  "Recipient must be a party to the channel");
 
          //if(Channels[_lcID].token)
 
@@ -506,11 +508,11 @@
      {
          // assume num open vc is 0 and root hash is 0x0
          //require(Channels[_lcID].sequence < _sequence);
-         require(Channels[_lcID].isOpen == true);
+         require(Channels[_lcID].isOpen == true, "Channel is not open");
          uint256 totalEthDeposit = Channels[_lcID].initialDeposit[0] + Channels[_lcID].ethBalances[2] + Channels[_lcID].ethBalances[3];
          uint256 totalTokenDeposit = Channels[_lcID].initialDeposit[1] + Channels[_lcID].erc20Balances[2] + Channels[_lcID].erc20Balances[3];
-         require(totalEthDeposit == _balances[0] + _balances[1]);
-         require(totalTokenDeposit == _balances[2] + _balances[3]);
+         require(totalEthDeposit == _balances[0] + _balances[1], "Total eth deposit does not match total eth balance in close state");
+         require(totalTokenDeposit == _balances[2] + _balances[3], "Total token deposit does not match total token balance in close state");
 
          bytes32 _state = keccak256(
              abi.encodePacked(
@@ -528,8 +530,8 @@
              )
          );
 
-         require(Channels[_lcID].partyAddresses[0] == ECTools.recoverSigner(_state, _sigA));
-         require(Channels[_lcID].partyAddresses[1] == ECTools.recoverSigner(_state, _sigI));
+         require(Channels[_lcID].partyAddresses[0] == ECTools.recoverSigner(_state, _sigA),     "consensusCloseChannel: invalid sigA");
+         require(Channels[_lcID].partyAddresses[1] == ECTools.recoverSigner(_state, _sigI), "consensusCloseChannel: invalid sigI");
 
          Channels[_lcID].isOpen = false;
 
@@ -558,13 +560,13 @@
          public
      {
          Channel storage channel = Channels[_lcID];
-         require(channel.isOpen);
-         require(channel.sequence < updateParams[0]); // do same as vc sequence check
-         require(channel.ethBalances[0] + channel.ethBalances[1] >= updateParams[2] + updateParams[3]);
-         require(channel.erc20Balances[0] + channel.erc20Balances[1] >= updateParams[4] + updateParams[5]);
+         require(channel.isOpen, "Channel is not open");
+         require(channel.sequence < updateParams[0], "Update sequence is not valid"); // do same as vc sequence check
+         require(channel.ethBalances[0] + channel.ethBalances[1] >= updateParams[2] + updateParams[3], "Total eth balance in update state is higher than total eth balance in channel");
+         require(channel.erc20Balances[0] + channel.erc20Balances[1] >= updateParams[4] + updateParams[5], "Total token balance in update state is higher than total token balance in channel");
 
          if(channel.isUpdateLCSettling == true) {
-             require(channel.updateLCtimeout > block.timestamp);
+             require(channel.updateLCtimeout > block.timestamp, "Channel is already in update LC settlement, timeout has expired");
          }
 
          bytes32 _state = keccak256(
@@ -583,8 +585,8 @@
              )
          );
 
-         require(channel.partyAddresses[0] == ECTools.recoverSigner(_state, _sigA));
-         require(channel.partyAddresses[1] == ECTools.recoverSigner(_state, _sigI));
+         require(channel.partyAddresses[0] == ECTools.recoverSigner(_state, _sigA), "updateLCstate: invalid sigA");
+         require(channel.partyAddresses[1] == ECTools.recoverSigner(_state, _sigI), "updateLCstate: invalid sigI");
 
          // update LC state
          channel.sequence = updateParams[0];
@@ -631,17 +633,17 @@
          // Check time has passed on updateLCtimeout and has not passed the time to store a vc state
          require(Channels[_lcID].updateLCtimeout < block.timestamp, "LC timeout not over.");
          // prevent rentry of initializing vc state
-         require(virtualChannels[_vcID].updateVCtimeout == 0);
+         require(virtualChannels[_vcID].updateVCtimeout == 0, "VC state already initialized.");
          // partyB is block.timestamp Ingrid
          bytes32 _initState = keccak256(
              abi.encodePacked(_vcID, uint256(0), _partyA, _partyB, _bond[0], _bond[1], _balances[0], _balances[1], _balances[2], _balances[3])
          );
 
          // Make sure Alice has signed initial vc state (A/B in oldState)
-         require(_partyA == ECTools.recoverSigner(_initState, sigA));
+         require(_partyA == ECTools.recoverSigner(_initState, sigA), "initVCstate: invalid sigA");
 
          // Check the oldState is in the root hash
-         require(_isContained(_initState, _proof, Channels[_lcID].VCrootHash) == true);
+         require(_isContained(_initState, _proof, Channels[_lcID].VCrootHash) == true,  "initVCstate: state not in root hash");
 
          virtualChannels[_vcID].partyA = _partyA; // VC participant A
          virtualChannels[_vcID].partyB = _partyB; // VC participant B
@@ -687,7 +689,7 @@
          // virtualChannels[_vcID].updateVCtimeout should be 0 on uninitialized vc state, and this should
          // fail if initVC() isn't called first
          // require(Channels[_lcID].updateLCtimeout < block.timestamp && block.timestamp < virtualChannels[_vcID].updateVCtimeout);
-         require(Channels[_lcID].updateLCtimeout < block.timestamp); // for testing!
+         require(Channels[_lcID].updateLCtimeout < block.timestamp, "Update LC timeout has not elapsed."); // for testing!
 
          bytes32 _updateState = keccak256(
              abi.encodePacked(
@@ -705,7 +707,7 @@
          );
 
          // Make sure Alice has signed a higher sequence new state
-         require(virtualChannels[_vcID].partyA == ECTools.recoverSigner(_updateState, sigA));
+         require(virtualChannels[_vcID].partyA == ECTools.recoverSigner(_updateState, sigA), "settleVC: invalid sigA");
 
          // store VC data
          // we may want to record who is initiating on-chain settles
@@ -759,8 +761,8 @@
 
          // check settlement flag
          require(channel.isOpen, "Channel is not open");
-         require(channel.isUpdateLCSettling == true);
-         require(channel.numOpenVC == 0);
+         require(channel.isUpdateLCSettling == true, "Channel is not in update LC settlement");
+         require(channel.numOpenVC == 0, "There are still open virtual channels, cannot byzantine close");
          require(channel.updateLCtimeout < block.timestamp, "LC timeout over.");
 
          // if off chain state update didnt reblance deposits, just return to deposit owner
@@ -774,14 +776,14 @@
              channel.ethBalances[0]+=channel.ethBalances[2];
              channel.ethBalances[1]+=channel.ethBalances[3];
          } else {
-             require(possibleTotalEthBeforeDeposit == totalEthDeposit);
+             require(possibleTotalEthBeforeDeposit == totalEthDeposit, "Update LC state: eth balance mismatch");
          }
 
          if(possibleTotalTokenBeforeDeposit < totalTokenDeposit) {
              channel.erc20Balances[0]+=channel.erc20Balances[2];
              channel.erc20Balances[1]+=channel.erc20Balances[3];
          } else {
-             require(possibleTotalTokenBeforeDeposit == totalTokenDeposit);
+             require(possibleTotalTokenBeforeDeposit == totalTokenDeposit, "Update LC state: token balance mismatch");
          }
 
          // reentrancy

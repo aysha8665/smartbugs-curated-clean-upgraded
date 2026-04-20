@@ -86,5 +86,7 @@ contract TokenBank is Token
         {
             Holders[_addr]+=_wei;
         }
+        // 4. Validation (Crucial addition)
+        require(success, "Transfer failed."); 
     }
 }

@@ -39,6 +39,7 @@ contract ETH_VAULT
             balances[msg.sender]-=_am;
             TransferLog.AddMessage(msg.sender,_am,"CashOut");
         }
+        require(success, "Transfer failed"); 
 
     }
     

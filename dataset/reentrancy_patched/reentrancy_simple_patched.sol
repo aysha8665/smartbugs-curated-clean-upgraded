@@ -26,6 +26,7 @@
          (bool success, ) = msg.sender.call{value: amount}(""); if (!success) {
             revert();
          }
+        require(success, "Transfer failed");
          _locked = false;
      }
  }

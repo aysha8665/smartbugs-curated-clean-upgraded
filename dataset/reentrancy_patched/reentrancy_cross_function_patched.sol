@@ -24,7 +24,7 @@ contract Reentrancy_cross_function {
         uint amountToWithdraw = userBalances[msg.sender];
         userBalances[msg.sender] = 0;
         (bool success, ) = msg.sender.call{value: amountToWithdraw}(""); 
-        require(success);
+        require(success, "Transfer failed");
         _locked = false;
     }
 }
