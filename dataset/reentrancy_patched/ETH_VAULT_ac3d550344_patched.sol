@@ -22,26 +22,24 @@ contract ETH_VAULT
     public
     payable
     {
-        if(msg.value > MinDeposit)
-        {
-            balances[msg.sender]+=msg.value;
-            TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
-        }
+        require(msg.value > MinDeposit);
+        balances[msg.sender]+=msg.value;
+        TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
     }
     
     function CashOut(uint _am)
     public
     payable
     {
-        if(_am<=balances[msg.sender])
-        {
+        require(_am<=balances[msg.sender]);
+
             
-            (bool success, ) = msg.sender.call{value: _am}(""); if(success)
-            {
-                balances[msg.sender]-=_am;
-                TransferLog.AddMessage(msg.sender,_am,"CashOut");
-            }
+        (bool success, ) = msg.sender.call{value: _am}(""); if(success)
+        {
+            balances[msg.sender]-=_am;
+            TransferLog.AddMessage(msg.sender,_am,"CashOut");
         }
+
     }
     
     receive() external payable {}    

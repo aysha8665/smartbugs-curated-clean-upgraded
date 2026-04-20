@@ -22,20 +22,20 @@ contract MY_BANK
         Holder storage acc = Acc[msg.sender];
         
         // 1. Checks
-        if( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime) {
-            
-            // 2. Effects
-            acc.balance -= _am;
-            
-            // 3. Interactions
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 4. Validation (Crucial addition)
-            require(success, "Transfer failed."); 
-            
-            // 5. Logging (Only reachable if the transfer succeeded)
-            LogFile.AddMessage(msg.sender, _am, "Collect");
-        }
+        require( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime);
+
+        // 2. Effects
+        acc.balance -= _am;
+
+        // 3. Interactions
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 4. Validation (Crucial addition)
+        require(success, "Transfer failed."); 
+        
+        // 5. Logging (Only reachable if the transfer succeeded)
+        LogFile.AddMessage(msg.sender, _am, "Collect");
+
     }
 
     receive() external payable {

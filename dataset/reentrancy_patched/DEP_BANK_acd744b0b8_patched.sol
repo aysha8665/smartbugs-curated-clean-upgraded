@@ -45,19 +45,19 @@ contract DEP_BANK
     }
     
     function Collect(uint _am) public payable {
-        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am) {
+        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am); 
             
-            // 1. Effect: Deduct balance first to prevent reentrancy
-            balances[msg.sender]-=_am; 
-            
-            // 2. Interaction: Execute the external call
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 3. Validation: Revert the entire state if the transfer fails
-            require(success, "Transfer failed"); 
-            
-            Log.AddMessage(msg.sender,_am,"Collect"); 
-        }
+        // 1. Effect: Deduct balance first to prevent reentrancy
+        balances[msg.sender]-=_am; 
+        
+        // 2. Interaction: Execute the external call
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 3. Validation: Revert the entire state if the transfer fails
+        require(success, "Transfer failed"); 
+        
+        Log.AddMessage(msg.sender,_am,"Collect"); 
+
     }
     
     receive() external payable {

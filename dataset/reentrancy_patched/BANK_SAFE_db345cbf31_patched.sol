@@ -45,20 +45,19 @@ contract BANK_SAFE
     }
     
     function Collect(uint _am) public payable {
-        require(balances[msg.sender] >= _am); // Check if the sender has enough balance
-        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am) {
+        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am);
             
-            // 1. Effect: Deduct balance first (prevents reentrancy)
-            balances[msg.sender]-=_am; 
-            
-            // 2. Interaction: Send Ether
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 3. Validation: Revert the whole transaction if the transfer fails
-            require(success, "Transfer failed"); 
-            
-            Log.AddMessage(msg.sender,_am,"Collect"); 
-        }
+        // 1. Effect: Deduct balance first (prevents reentrancy)
+        balances[msg.sender]-=_am; 
+        
+        // 2. Interaction: Send Ether
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 3. Validation: Revert the whole transaction if the transfer fails
+        require(success, "Transfer failed"); 
+        
+        Log.AddMessage(msg.sender,_am,"Collect"); 
+        
     }
     
     receive() external payable {

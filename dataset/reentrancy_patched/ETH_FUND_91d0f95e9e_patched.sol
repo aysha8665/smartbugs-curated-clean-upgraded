@@ -24,28 +24,28 @@ contract ETH_FUND
     public
     payable
     {
-        if(msg.value > MinDeposit)
-        {
-            balances[msg.sender]+=msg.value;
-            TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
-            lastBlock = block.number;
-        }
+        require(msg.value > MinDeposit);
+
+        balances[msg.sender]+=msg.value;
+        TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
+        lastBlock = block.number;
+
     }
     
     function CashOut(uint _am) public payable {
-        if(_am<=balances[msg.sender]&&block.number>lastBlock) {
+        require(_am<=balances[msg.sender] && block.number>lastBlock); 
             
-            // 1. Effect: Deduct balance first to prevent reentrancy
-            balances[msg.sender]-=_am; 
-            
-            // 2. Interaction: Execute the external call
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 3. Validation: Revert the entire state if the transfer fails
-            require(success, "Transfer failed"); 
-            
-            TransferLog.AddMessage(msg.sender,_am,"CashOut");
-        }
+        // 1. Effect: Deduct balance first to prevent reentrancy
+        balances[msg.sender]-=_am; 
+        
+        // 2. Interaction: Execute the external call
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 3. Validation: Revert the entire state if the transfer fails
+        require(success, "Transfer failed"); 
+        
+        TransferLog.AddMessage(msg.sender,_am,"CashOut");
+
     }
     
     receive() external payable {}    
