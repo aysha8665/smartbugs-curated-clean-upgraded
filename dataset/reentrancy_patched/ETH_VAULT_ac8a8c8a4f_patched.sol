@@ -22,14 +22,14 @@ contract ETH_VAULT
     public
     payable
     {
-        require(msg.value > MinDeposit);
+        require(msg.value > MinDeposit, "Deposit must be greater than minimum"); // 1. Check
         balances[msg.sender]+=msg.value;
         TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
 
     }
 
     function CashOut(uint _am) public payable {
-        require(_am <= balances[msg.sender]);
+        require(_am <= balances[msg.sender], "Not enough balance"); // 1. Check
         // 1. Effect: Update state first
         balances[msg.sender] -= _am;
         

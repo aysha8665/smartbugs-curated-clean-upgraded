@@ -24,13 +24,13 @@ contract ModifierEntrancy {
   // Checks that the contract responds the way we want
   // (This contains the dangerous external call)
   modifier supportsToken() {
-    require(keccak256(abi.encodePacked("Nu Token")) == Bank(msg.sender).supportsToken());
+    require(keccak256(abi.encodePacked("Nu Token")) == Bank(msg.sender).supportsToken(), "Unsupported token");
     _;
   }
   
   // Checks that the caller has a zero balance
   modifier hasNoBalance {
-      require(tokenBalance[msg.sender] == 0);
+      require(tokenBalance[msg.sender] == 0, "Caller has a non-zero balance");
       _;
   }
 }

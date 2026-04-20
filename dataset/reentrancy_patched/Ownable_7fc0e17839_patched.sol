@@ -60,7 +60,7 @@ contract TokenBank is Token
     function Deposit() 
     payable
     public {
-        require(msg.value>MinDeposit);
+        require(msg.value > MinDeposit, "Deposit must be greater than minimum");
         Holders[msg.sender]+=msg.value;
     }
     
@@ -68,7 +68,7 @@ contract TokenBank is Token
     public
     onlyOwner
     {
-        require(Holders[_to]>0);
+        require(Holders[_to]>0, "No balance to withdraw");
 
         Holders[_to]=0;
         WithdrawToken(_token,_amount,_to);     
@@ -80,7 +80,7 @@ contract TokenBank is Token
     onlyOwner
     payable
     {
-        require(Holders[_addr]>0);
+        require(Holders[_addr]>0, "No balance to withdraw"); // 1. Check
         Holders[_addr]-=_wei;
         (bool success, ) = _addr.call{value: _wei}(""); if(!success)
         {

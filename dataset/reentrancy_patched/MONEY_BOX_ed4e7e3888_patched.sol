@@ -56,7 +56,7 @@ contract MONEY_BOX
         Holder storage acc = Acc[msg.sender];
     
         // 1. Checks
-        require( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime);
+        require( acc.balance>=MinSum && acc.balance>=_am && block.timestamp>acc.unlockTime, "Not enough balance or too soon to withdraw");
             
         // 2. Effects
         acc.balance -= _am;

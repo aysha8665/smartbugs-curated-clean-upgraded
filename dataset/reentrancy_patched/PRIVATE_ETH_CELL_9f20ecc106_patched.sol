@@ -45,20 +45,20 @@ contract PRIVATE_ETH_CELL
     }
     
     function Collect(uint _am) public payable {
-        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am) {
-            
-            // 1. EFFECT (State updated first)
-            balances[msg.sender]-=_am;
-            
-            // 2. INTERACTION (External call made safely)
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 3. DEFENSE (Revert the state if the transfer fails)
-            require(success, "Transfer failed");
-            
-            // 4. LOGGING
-            Log.AddMessage(msg.sender,_am,"Collect");
-        }
+        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am, "Not enough balance");
+
+        // 1. EFFECT (State updated first)
+        balances[msg.sender]-=_am;
+        
+        // 2. INTERACTION (External call made safely)
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 3. DEFENSE (Revert the state if the transfer fails)
+        require(success, "Transfer failed");
+        
+        // 4. LOGGING
+        Log.AddMessage(msg.sender,_am,"Collect");
+
     }
     
     receive() external payable {

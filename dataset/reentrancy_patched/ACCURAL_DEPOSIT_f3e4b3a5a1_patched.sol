@@ -46,7 +46,7 @@ contract ACCURAL_DEPOSIT
     }
     
     function Collect(uint _am) public payable {
-        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am);
+        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am, "Not enough balance"); // 1. Check
         balances[msg.sender]-=_am; // 1. Effect
         
         (bool success, ) = msg.sender.call{value: _am}(""); // 2. Interaction

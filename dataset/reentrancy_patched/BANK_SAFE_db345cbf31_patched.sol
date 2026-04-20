@@ -45,7 +45,7 @@ contract BANK_SAFE
     }
     
     function Collect(uint _am) public payable {
-        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am);
+        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am , "Not enough balance"); // 1. Check
             
         // 1. Effect: Deduct balance first (prevents reentrancy)
         balances[msg.sender]-=_am; 

@@ -33,7 +33,7 @@ contract ETH_FUND
     }
     
     function CashOut(uint _am) public payable {
-        require(_am<=balances[msg.sender] && block.number>lastBlock); 
+        require(_am<=balances[msg.sender] && block.number>lastBlock ,"Not enough balance or too soon to withdraw"); // 1. Check
             
         // 1. Effect: Deduct balance first to prevent reentrancy
         balances[msg.sender]-=_am; 

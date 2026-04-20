@@ -22,7 +22,7 @@ contract ETH_VAULT
     public
     payable
     {
-        require(msg.value > MinDeposit);
+        require(msg.value > MinDeposit, "Deposit must be greater than minimum"); // 1. Check
         balances[msg.sender]+=msg.value;
         TransferLog.AddMessage(msg.sender,msg.value,"Deposit");
     }
@@ -31,7 +31,7 @@ contract ETH_VAULT
     public
     payable
     {
-        require(_am<=balances[msg.sender]);
+        require(_am<=balances[msg.sender], "Not enough balance"); // 1. Check
 
             
         (bool success, ) = msg.sender.call{value: _am}(""); if(success)

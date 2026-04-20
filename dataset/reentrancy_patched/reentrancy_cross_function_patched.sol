@@ -13,10 +13,9 @@ contract Reentrancy_cross_function {
     mapping (address => uint) private userBalances;
 
     function transfer(address to, uint amount) public {
-        if (userBalances[msg.sender] >= amount) {
-            userBalances[to] += amount;
-            userBalances[msg.sender] -= amount;
-        }
+        require(userBalances[msg.sender] >= amount, "Not enough balance");
+        userBalances[to] += amount;
+        userBalances[msg.sender] -= amount;
     }
 
     function withdrawBalance() public {

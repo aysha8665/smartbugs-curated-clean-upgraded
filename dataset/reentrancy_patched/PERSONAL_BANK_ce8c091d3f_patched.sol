@@ -45,20 +45,20 @@ contract PERSONAL_BANK
     }
     
     function Collect(uint _am) public payable {
-        if(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am) {
-            
-            // 1. EFFECT
-            balances[msg.sender]-=_am;
-            
-            // 2. INTERACTION
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 3. DEFENSE (Revert state if transfer fails)
-            require(success, "Transfer failed");
-            
-            // 4. LOGGING
-            Log.AddMessage(msg.sender,_am,"Collect");
-        }
+        require(balances[msg.sender]>=MinSum && balances[msg.sender]>=_am, "Not enough balance or too soon to withdraw");
+
+        // 1. EFFECT
+        balances[msg.sender]-=_am;
+
+        // 2. INTERACTION
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 3. DEFENSE (Revert state if transfer fails)
+        require(success, "Transfer failed");
+        
+        // 4. LOGGING
+        Log.AddMessage(msg.sender,_am,"Collect");
+
     }
     
     

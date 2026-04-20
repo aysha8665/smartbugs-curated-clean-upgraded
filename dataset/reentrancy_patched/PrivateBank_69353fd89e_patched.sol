@@ -30,20 +30,20 @@ contract PrivateBank
     }
     
     function CashOut(uint _am) public {
-        if(_am<=balances[msg.sender]) {            
+        require(_am<=balances[msg.sender], "Not enough balance");
             
-            // 1. EFFECT
-            balances[msg.sender]-=_am;
-            
-            // 2. INTERACTION
-            (bool success, ) = msg.sender.call{value: _am}(""); 
-            
-            // 3. DEFENSE (Revert state if transfer fails)
-            require(success, "Transfer failed");
-            
-            // 4. LOGGING
-            TransferLog.AddMessage(msg.sender,_am,"CashOut");
-        }
+        // 1. EFFECT
+        balances[msg.sender]-=_am;
+        
+        // 2. INTERACTION
+        (bool success, ) = msg.sender.call{value: _am}(""); 
+        
+        // 3. DEFENSE (Revert state if transfer fails)
+        require(success, "Transfer failed");
+        
+        // 4. LOGGING
+        TransferLog.AddMessage(msg.sender,_am,"CashOut");
+
     }
     
     receive() external payable {}    

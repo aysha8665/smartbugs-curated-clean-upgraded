@@ -23,7 +23,7 @@ contract EtherStore {
         _locked = true;
         require(balances[msg.sender] >= _weiToWithdraw);
         
-        require(_weiToWithdraw <= withdrawalLimit);
+        require(_weiToWithdraw <= withdrawalLimit, "Withdrawal amount exceeds the limit");
         
         require(block.timestamp >= lastWithdrawTime[msg.sender] + 1 weeks);
         balances[msg.sender] -= _weiToWithdraw;

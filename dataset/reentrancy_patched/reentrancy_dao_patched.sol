@@ -15,12 +15,11 @@ contract ReentrancyDAO {
         require(!_locked, "ReentrancyGuard: reentrant call");
         _locked = true;
         uint oCredit = credit[msg.sender];
-        if (oCredit > 0) {
-            credit[msg.sender] = 0;
-            balance -= oCredit;
-            (bool callResult, ) = msg.sender.call{value: oCredit}("");
-            require (callResult);
-        }
+        require(oCredit > 0, "No credit to withdraw");
+        credit[msg.sender] = 0;
+        balance -= oCredit;
+        (bool callResult, ) = msg.sender.call{value: oCredit}("");
+        require (callResult);
         _locked = false;
     }
 
