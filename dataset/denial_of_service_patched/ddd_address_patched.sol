@@ -12,9 +12,13 @@ contract DGas {
     bool win = false;
 
     function emptyCreditors() public {
-        
+
         if(creditorAddresses.length>1500) {
-            creditorAddresses = new address[](0);
+            // PATCH: use `delete` instead of `new address[](0)`.
+            // `delete` sets the array length to 0 in O(1) without
+            // iterating over every storage slot, so this function
+            // can never be DoS'd by a large array.
+            delete creditorAddresses;
             win = true;
         }
     }
