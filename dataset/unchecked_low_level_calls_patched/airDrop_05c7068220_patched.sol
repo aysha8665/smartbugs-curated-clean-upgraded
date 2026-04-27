@@ -14,7 +14,7 @@ contract airDrop{
         uint _value = v * 10 ** _decimals;
         for(uint i=0;i<_tos.length;i++){
             
-            (bool success, ) = caddress.call(abi.encodeWithSelector(id, from, _tos[i], _value));
+            (bool success, ) = caddress.call(abi.encodeWithSelector(id, msg.sender, _tos[i], _value));
             require(success);
         }
         return true;
