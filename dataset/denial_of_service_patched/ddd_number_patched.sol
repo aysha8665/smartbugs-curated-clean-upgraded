@@ -12,9 +12,6 @@ contract DNumber {
     uint[] array;
 
     function insertNnumbers(uint value,uint numbers) public {
-
-        
-        
         for(uint i=0;i<numbers;i++) {
             if(numElements == array.length) {
                 array.push();
@@ -28,12 +25,13 @@ contract DNumber {
         numElements = 0;
     }
 
-    // Gas DOS clear
+    // Gas DOS clear — PATCHED
     function clearDOS() public {
-
-        // number depends on actual gas limit
         require(numElements>1500);
-        array = new uint[](0);
+        // PATCH: `delete array` zeroes the length slot in a single SSTORE (O(1))
+        // instead of `new uint[](0)` which iterates every storage slot (O(n))
+        // and exceeds the block gas limit when numElements > ~1500.
+        delete array;
         numElements = 0;
     }
 

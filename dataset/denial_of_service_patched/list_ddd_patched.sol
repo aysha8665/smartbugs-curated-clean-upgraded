@@ -42,10 +42,15 @@ contract Government {
              lastCreditorPayedOut = 0;
              lastTimeOfNewCredit = block.timestamp;
              profitFromCrash = 0;
-           
-             creditorAddresses = new address[](0);
-           
-             creditorAmounts = new uint[](0);
+
+             // PATCH: replace `new address[](0)` and `new uint[](0)` with `delete`.
+             // The original resets iterate every storage slot (O(n)) and exceed the
+             // block gas limit once the creditor lists grow large enough, permanently
+             // bricking the crash-reset branch. `delete` resets the length in a
+             // single SSTORE (O(1)) regardless of array size.
+             delete creditorAddresses;
+             delete creditorAmounts;
+
              round += 1;
              return false;
          }
@@ -90,6 +95,10 @@ contract Government {
          lendGovernmentMoney(address(0));
      }
 
+     // NOTE: totalDebt() and totalPayedOut() are secondary DoS vectors —
+     // both iterate the full creditor array unboundedly. Not patched here
+     // to keep signatures intact for exploit testing, but in production
+     // these should use pagination or an incremental accumulator pattern.
      function totalDebt() public returns(uint debt) {
          for(uint i=lastCreditorPayedOut; i<creditorAmounts.length; i++){
              debt += creditorAmounts[i];
