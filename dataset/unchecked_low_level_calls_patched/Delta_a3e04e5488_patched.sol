@@ -45,14 +45,12 @@ contract Delta {
 
         require(tokens_buy > 0);
 
-        (bool success, ) = c.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", owner, msg.sender, tokens_buy)); if(!success){
-        require(success);
-        	return false;
-        }
+        (bool success, ) = c.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", owner, msg.sender, tokens_buy)); 
+        require(success, "Token transfer failed");
 
         uint sum2 = msg.value * 3 / 10;           
         
-        require(payable(owner2).send(sum2));
+        require(payable(owner2).send(sum2), "ETH send to owner2 failed");
 
         return true;
       }     
@@ -61,9 +59,13 @@ contract Delta {
       function withdraw(uint256 _amount) onlyOwner public returns(bool result) {
           uint256 balance;
           balance = address(this).balance;
-          if(_amount > 0) balance = _amount;
+
+          if (_amount > 0) {
+            require(_amount <= balance, "Amount exceeds contract balance");
+            balance = _amount;
+        }
           
-          require(payable(owner).send(balance));
+          require(payable(owner).send(balance), "ETH withdrawal failed");
           return true;
       }
 
