@@ -24,7 +24,8 @@ contract EtherStore {
         
         require(block.timestamp >= lastWithdrawTime[msg.sender] + 1 weeks);
         
-        (bool success, ) = msg.sender.call{value: _weiToWithdraw}(""); require(success);
+        (bool success, ) = msg.sender.call{value: _weiToWithdraw}(""); 
+        require(success, "Failed to withdraw funds");
         unchecked
         {
             balances[msg.sender] -= _weiToWithdraw;

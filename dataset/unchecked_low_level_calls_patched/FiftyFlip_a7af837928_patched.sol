@@ -148,7 +148,7 @@ contract FiftyFlip {
         uint donate_amount = amount * DONATING_X / 1000;
         
         (bool success, ) = whale.call{value: donate_amount}(abi.encodeWithSignature("donate()"));
-        require(success);
+        require(success, "Failed to call donate function of whale contract");
         totalAmountToWhale += donate_amount;
 
         bet.amount = amount;

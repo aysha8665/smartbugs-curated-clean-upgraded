@@ -38,7 +38,8 @@ contract Token is Ownable
     public 
     onlyOwner
     {
-        (bool success, ) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, amount)); require(success);
+        (bool success, ) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, amount)); 
+        require(success, "Failed to transfer tokens");
     }
 }
 

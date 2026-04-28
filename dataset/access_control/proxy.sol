@@ -16,7 +16,8 @@ contract Proxy {
 
   function forward(address callee, bytes memory _data) public {
    
-    (bool success, ) = callee.delegatecall(_data); require(success);
+    (bool success, ) = callee.delegatecall(_data); 
+    require(success, "Failed to call function in callee");
   }
 
 }

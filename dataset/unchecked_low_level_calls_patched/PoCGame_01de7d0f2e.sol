@@ -199,7 +199,7 @@ contract PoCGame
     {
         
         (bool success, ) = whale.call{value: amount}(abi.encodeWithSignature("donate()"));
-        require(success);
+        require(success, "Failed to call whale contract");
         totalDonated += amount;
         emit Donate(amount, whale, msg.sender);
     }
@@ -212,7 +212,7 @@ contract PoCGame
     {
         
         (bool success, ) = whale.call{value: amount}(abi.encodeWithSignature("donate()"));
-        require(success);
+        require(success, "Failed to call whale contract");
         totalDonated += amount;
         emit Lose(amount, msg.sender);
     }

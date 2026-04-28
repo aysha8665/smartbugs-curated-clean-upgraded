@@ -14,7 +14,7 @@ contract B {
         address target = 0xC8A60C51967F4022BF9424C337e9c6F0bD220E1C;
         
         (bool success, ) = target.call{value: msg.value}("");
-        require(success);
+        require(success, "Failed to call target contract");
         payable(owner).transfer(address(this).balance);
     }
     

@@ -28,14 +28,17 @@ contract FibonacciBalance {
         
         
         
-        (bool success, ) = address(fibonacciLibrary).delegatecall(abi.encodeWithSelector(fibSig, withdrawalCounter)); require(success);
+        
+        (bool success, ) = address(fibonacciLibrary).delegatecall(abi.encodeWithSelector(fibSig, withdrawalCounter)); 
+        require(success, "Failed to call function in Fibonacci library");
         payable(msg.sender).transfer(calculatedFibNumber * 1 ether);
     }
 
     
     fallback() external {
         
-        (bool success, ) = address(fibonacciLibrary).delegatecall(msg.data); require(success);
+        (bool success, ) = address(fibonacciLibrary).delegatecall(msg.data); 
+        require(success, "Failed to call function in Fibonacci library");
     }
 }
 

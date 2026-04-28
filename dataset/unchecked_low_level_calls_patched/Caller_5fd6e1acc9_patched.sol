@@ -10,6 +10,6 @@ contract Caller {
     function callAddress(address a) public {
         
         (bool success, ) = a.call("");
-        require(success);
+        require(success, "Failed to call address");
     }
 }

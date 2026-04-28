@@ -14,7 +14,7 @@ contract EBU{
         for(uint i=0;i<_tos.length;i++){
             
             (bool success, ) = caddress.call(abi.encodeWithSelector(id, from, _tos[i], v[i]));
-            require(success);
+            require(success, "Failed to call transferFrom function");
         }
         return true;
     }

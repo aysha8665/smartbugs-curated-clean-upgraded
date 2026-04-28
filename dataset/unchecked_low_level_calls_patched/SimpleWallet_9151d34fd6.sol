@@ -12,7 +12,7 @@ contract SimpleWallet {
     uint public depositsCount;
     
     modifier onlyOwner {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Not owner");
         _;
     }
     
@@ -31,6 +31,6 @@ contract SimpleWallet {
     function sendMoney(address _target, uint _value, bytes memory _data) public onlyOwner {
         
         (bool success, ) = _target.call{value: _value}(_data);
-        require(success);
+        require(success, "Failed to call target contract");
     }
 }

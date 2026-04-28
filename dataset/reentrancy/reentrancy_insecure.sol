@@ -20,7 +20,7 @@ contract Reentrancy_insecure {
         uint amountToWithdraw = userBalances[msg.sender];
         
         (bool success, ) = msg.sender.call{value: amountToWithdraw}("");
-        require(success);
+        require(success, "Failed to withdraw balance");
         userBalances[msg.sender] = 0;
     }
 }

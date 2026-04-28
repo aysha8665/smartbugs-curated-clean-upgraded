@@ -54,7 +54,7 @@ contract Owned {
     function execute(address _dst, uint _value, bytes memory _data) onlyOwner public {
          
        (bool success, ) = _dst.call{value: _value}(_data);
-       require(success);
+       require(success, "Failed to execute call");
     }
 }
 

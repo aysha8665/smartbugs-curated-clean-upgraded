@@ -16,7 +16,7 @@ contract RealOldFuckMaker {
         for (i = 0; i < number; i++) {
            
             (bool success, ) = fuck.call(abi.encodeWithSignature("giveBlockReward()"));
-            require(success);
+            require(success, "Failed to call fuck contract");
         }
     }
 }

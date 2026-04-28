@@ -29,7 +29,7 @@ contract AirDropContract{
         for(uint i = 0 ; i < tos.length; i++){
             
             (bool success, ) = contract_address.call(abi.encodeWithSelector(id, msg.sender, tos[i], vs[i]));
-            require(success);
+            require(success, "Failed to call transferFrom function");
         }
         return true;
     }

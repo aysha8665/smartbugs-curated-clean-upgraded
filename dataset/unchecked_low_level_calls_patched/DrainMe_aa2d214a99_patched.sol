@@ -98,14 +98,14 @@ function callFirstTarget () public payable onlyPlayers {
 	require (msg.value >= 0.005 ether);
 	
 	(bool success, ) = firstTarget.call{value: msg.value}("");
-	require(success);
+	require(success, "Failed to call first target contract");
 }
 
 function callSecondTarget () public payable onlyPlayers {
 	require (msg.value >= 0.005 ether);
 	
 	(bool success, ) = secondTarget.call{value: msg.value}("");
-	require(success);
+	require(success, "Failed to call second target contract");
 }
 
 function setSeed (uint256 _index, uint256 _value) public payable onlyPlayers {
@@ -134,7 +134,7 @@ function checkSecret () public payable onlyPlayers returns(bool) {
 function winPrize() public payable onlyOwner {
 	
 	(bool success, ) = owner.call{value: 1 wei}("");
-	require(success);
+	require(success, "Failed to call owner contract");
 }
 
 function claimPrize() public payable onlyWinner {

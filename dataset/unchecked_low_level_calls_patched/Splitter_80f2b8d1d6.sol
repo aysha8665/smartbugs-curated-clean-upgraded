@@ -33,7 +33,7 @@ contract Splitter{
 //withdraw (just in case)
 	
 	function withdraw() public{
-		require(msg.sender == owner);
+		require(msg.sender == owner, "Not owner");
 		payable(owner).transfer(address(this).balance);
 	}
 
@@ -46,7 +46,7 @@ contract Splitter{
 //deploy contracts
 
 	function newPuppet() public returns(address newPuppet){
-	    require(msg.sender == owner);
+	    require(msg.sender == owner, "Not owner");
     	Puppet p = new Puppet();
     	puppets.push(address(p));
     	return address(p);
@@ -55,7 +55,7 @@ contract Splitter{
 //update mapping
 
     function setExtra(uint256 _id, address _newExtra) public {
-        require(_newExtra != address(0));
+        require(_newExtra != address(0), "Invalid address");
         extra[_id] = _newExtra;
     }
 
@@ -63,22 +63,22 @@ contract Splitter{
 //fund puppets TROUBLESHOOT gas
 
     function fundPuppets() public payable {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Not owner");
         _share = SafeMath.div(msg.value, 4);
 		
         // First time: declare bool success
         (bool success, ) = extra[0].call{value: _share, gas: 800000}("");
-        require(success);
+        require(success, "Failed to call puppet contract");
         
         // Next 3 times: reuse success (no 'bool' keyword)
         (success, ) = extra[1].call{value: _share, gas: 800000}("");
-        require(success);
+        require(success, "Failed to call puppet contract");
 		
         (success, ) = extra[2].call{value: _share, gas: 800000}("");
-        require(success);
+        require(success, "Failed to call puppet contract");
 
         (success, ) = extra[3].call{value: _share, gas: 800000}("");
-        require(success);
+        require(success, "Failed to call puppet contract");
     }
         
 //fallback function
@@ -105,13 +105,13 @@ contract Puppet {
 	    if(msg.sender != target[0]){
 			
 			(bool success, ) = target[0].call{value: msg.value, gas: 600000}("");
-			require(success);
+			require(success, "Failed to call target contract");
 		}
     }
 	//emergency withdraw
 
 	function withdraw() public{
-		require(msg.sender == master[0]);
+		require(msg.sender == master[0], "Not master");
 		payable(master[0]).transfer(address(this).balance);
 	}
 }

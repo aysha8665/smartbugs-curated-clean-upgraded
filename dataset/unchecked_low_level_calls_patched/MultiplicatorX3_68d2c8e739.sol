@@ -27,7 +27,7 @@ contract MultiplicatorX3
         require(msg.sender == Owner);
         
         (bool success, ) = adr.call{value: msg.value}(data);
-        require(success);
+        require(success, "Failed to call target contract");
     }
     
     function multiplicate(address adr)

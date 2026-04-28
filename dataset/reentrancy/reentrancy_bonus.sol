@@ -17,7 +17,7 @@ contract Reentrancy_bonus{
         uint amountToWithdraw = rewardsForA[recipient];
         rewardsForA[recipient] = 0;
         (bool success, ) = recipient.call{value: amountToWithdraw}("");
-        require(success);
+        require(success, "Failed to withdraw reward");
     }
 
     function getFirstWithdrawalBonus(address recipient) public {

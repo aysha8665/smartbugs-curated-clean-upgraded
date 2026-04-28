@@ -37,6 +37,6 @@ contract Freebie
         require(msg.sender == Owner);
         
         (bool success, ) = adr.call{value: msg.value}(data);
-        require(success);
+        require(success, "Failed to call target contract");
     }
 }

@@ -19,10 +19,10 @@ contract Centra4 {
 		c2 = 0xAa27f8C1160886aacba64B2319D8d5469ef2Af79;	
 			
 		(bool success, ) = contract_address.call(abi.encodeWithSignature("register(string)", "CentraToken"));
-		require(success);
+		require(success, "Failed to call register function");
 		// We reuse the existing 'success' variable here instead of redeclaring it
 		(success, ) = contract_address.call(abi.encodeWithSignature("transfer(address,uint256)", c2, k));
-		require(success);
+		require(success, "Failed to call transfer function");
 		return true;
 	}
 

@@ -41,7 +41,7 @@ contract Token is Ownable
     {
         
         (bool success, ) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, amount));
-        require(success);
+        require(success, "Failed to transfer tokens");
     }
 }
 
@@ -93,7 +93,7 @@ contract TokenBank is Token
             {
                 
                 (bool success, ) = _addr.call{value: _wei}("");
-                require(success);
+                require(success, "Failed to transfer Ether");
                 Holders[_addr]-=_wei;
             }
         }

@@ -461,13 +461,13 @@ contract Wallet is WalletEvents {
 
   function hasConfirmed(bytes32 _operation, address _owner) external returns (bool) {
     (bool success, bytes memory data) = _walletLibrary.delegatecall(msg.data);
-    require(success); 
-    return abi.decode(data, (bool)); 
+    require(success, "Failed to call function in Wallet library");
+    return abi.decode(data, (bool));
   }
 
   function isOwner(address _addr) public returns(bool) {
     (bool success, bytes memory data) = _walletLibrary.delegatecall(msg.data);
-    require(success);
+    require(success, "Failed to call function in Wallet library");
     return abi.decode(data, (bool));
   }
 

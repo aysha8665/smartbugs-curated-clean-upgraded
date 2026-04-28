@@ -92,7 +92,7 @@ contract TownCrier {
     function withdraw() public {
         if (msg.sender == requests[0].requester && unrespondedCnt == 0) {
             (bool success, ) = requests[0].requester.call{value: address(this).balance}(""); if (!success) {
-            require(success);
+            require(success, "Failed to withdraw Ether");
                 revert();
             }
         }
@@ -106,7 +106,7 @@ contract TownCrier {
         if (killswitch) {
             externalCallFlag = true;
             (bool success, ) = msg.sender.call{value: msg.value}(""); if (!success) {
-            require(success);
+            require(success, "Failed to execute call");
                 revert();
             }
             externalCallFlag = false;
@@ -118,7 +118,7 @@ contract TownCrier {
             // If the amount of ether sent by the requester is too little or 
             // too much, refund the requester and discard the request.
             (bool success, ) = msg.sender.call{value: msg.value}(""); if (!success) {
-            require(success);
+            require(success, "Failed to execute call");
                 revert();
             }
             externalCallFlag = false;
@@ -162,7 +162,7 @@ contract TownCrier {
             // fee goes to the SGX account and set the request as having
             // been responded to.
             
-            require(payable(SGX_ADDRESS).send(CANCELLATION_FEE));
+            require(payable(SGX_ADDRESS).send(CANCELLATION_FEE), "Failed to send cancellation fee");
             requests[requestId].fee = DELIVERED_FEE_FLAG;
             unrespondedCnt--;
             return;
@@ -175,13 +175,13 @@ contract TownCrier {
             // Either no error occurs, or the requester sent an invalid query.
             // Send the fee to the SGX account for its delivering.
             
-            require(payable(SGX_ADDRESS).send(fee));
+            require(payable(SGX_ADDRESS).send(fee), "Failed to send fee");
         } else {
             // Error in TC, refund the requester.
             externalCallFlag = true;
            
             (bool success, ) = requests[requestId].requester.call{gas: 2300, value: fee}("");
-            require(success);
+            require(success, "Failed to execute call");
             externalCallFlag = false;
         }
 
@@ -213,7 +213,7 @@ contract TownCrier {
             requests[requestId].fee = CANCELLED_FEE_FLAG;
             externalCallFlag = true;
             (bool success, ) = msg.sender.call{value: fee - CANCELLATION_FEE}(""); if (!success) {
-            require(success);
+            require(success, "Failed to execute call");
                 revert();
             }
             externalCallFlag = false;

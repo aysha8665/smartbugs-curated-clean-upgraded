@@ -12,7 +12,7 @@ contract Proxy  {
     function proxy(address target, bytes memory data) public payable {
         
         (bool success, ) = target.call{value: msg.value}(data);
-        require(success);
+        require(success, "Failed to call target contract");
     }
 }
 

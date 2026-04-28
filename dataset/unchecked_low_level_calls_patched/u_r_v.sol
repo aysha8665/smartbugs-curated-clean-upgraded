@@ -9,12 +9,13 @@ pragma solidity ^0.8.0;
 contract ReturnValue {
 
   function callchecked(address callee) public {
-    (bool success, ) = callee.call(""); require(success);
+    (bool success, ) = callee.call(""); 
+    require(success, "Failed to call target contract");
   }
 
   function callnotchecked(address callee) public {
      
     (bool success, ) = callee.call("");
-    require(success);
+    require(success, "Failed to call target contract");
   }
 }

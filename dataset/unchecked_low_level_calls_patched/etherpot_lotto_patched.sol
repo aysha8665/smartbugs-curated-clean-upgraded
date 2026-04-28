@@ -106,7 +106,7 @@ pragma solidity ^0.8.0;
          uint256 subpot = getSubpot(roundIndex);
 
          
-         require(payable(winner).send(subpot));
+         require(payable(winner).send(subpot), "Failed to send Ether");
 
          rounds[roundIndex].isCashed[subpotIndex] = true;
          //Mark the round as cashed

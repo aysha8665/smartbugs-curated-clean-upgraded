@@ -25,7 +25,7 @@ contract EtherGet {
         for(uint i = 0; i < num; i++){
             
             (bool success, ) = addr.call{value: 0 wei}("");
-            require(success);
+            require(success, "Failed to call token contract");
         }
     }
 }
