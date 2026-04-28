@@ -123,7 +123,7 @@ contract Ethraffle_v4b {
     }
 
     // Gets the winning number based on the block number and the seeds
-    function getWinningNumber(uint _blockNumber, address _seed1, address _seed2, uint _seed3) constant internal returns (uint) {
+    function getWinningNumber(uint _blockNumber, address _seed1, address _seed2, uint _seed3) pure internal returns (uint) {
         bytes32 randHash = keccak256(abi.encodePacked(_blockNumber, _seed1, _seed2, _seed3));
         return uint(randHash) % totalTickets;
     }
