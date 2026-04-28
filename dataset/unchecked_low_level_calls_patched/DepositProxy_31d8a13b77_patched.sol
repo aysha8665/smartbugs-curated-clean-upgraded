@@ -7,10 +7,14 @@
 pragma solidity ^0.8.0;
 
 contract Proxy  {
-    modifier onlyOwner { if (msg.sender == Owner) _; } address Owner = msg.sender;
-    function transferOwner(address _owner) public onlyOwner { Owner = _owner; } 
+    modifier onlyOwner { if (msg.sender == Owner) _; } 
+    address Owner = msg.sender;
+    
+    function transferOwner(address _owner) public onlyOwner { 
+        Owner = _owner; 
+    } 
+    
     function proxy(address target, bytes memory data) public payable {
-        
         (bool success, ) = target.call{value: msg.value}(data);
         require(success);
     }
@@ -18,7 +22,7 @@ contract Proxy  {
 
 contract DepositProxy is Proxy {
     mapping (address => uint256) public Deposits;
-
+    
     receive() external payable { }
     
     function Vault() public payable {
@@ -35,7 +39,7 @@ contract DepositProxy is Proxy {
     }
     
     function withdraw(uint256 amount) public onlyOwner {
-        if (amount>0 && Deposits[msg.sender]>=amount) {
+        if (amount > 0 && Deposits[msg.sender] >= amount) {
             payable(msg.sender).transfer(amount);
         }
     }
