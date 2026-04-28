@@ -67,62 +67,68 @@ contract Ethraffle_v4b {
             return;
         }
 
-        uint moneySent = msg.value;
+        uint value = msg.value;
+        if (value == 0) {
+            return;
+        }
 
-        while (moneySent >= pricePerTicket && nextTicket < totalTickets) {
-            uint currTicket = 0;
-            if (gaps.length > 0) {
-                currTicket = gaps[gaps.length-1];
-                gaps.pop();
-            } else {
-                currTicket = nextTicket++;
+        value = (value / pricePerTicket) * pricePerTicket;
+
+        if (value < msg.value) {
+             // PATCH: Use transfer() instead of send() to ensure transaction reverts 
+             // if the refund fails, preventing the contract from trapping the user's change.
+             payable(msg.sender).transfer(msg.value-value);
+        }
+
+        uint tickets = value / pricePerTicket;
+        for (uint i = 0; i < tickets; i++) {
+            if (nextTicket >= totalTickets) {
+                // Refund the rest of the money
+                uint refund = (tickets - i) * pricePerTicket;
+                payable(msg.sender).transfer(refund);
+                return;
             }
 
-            contestants[currTicket] = Contestant(msg.sender, raffleId);
-            emit TicketPurchase(raffleId, msg.sender, currTicket);
-            moneySent -= pricePerTicket;
-        }
-
-        // Choose winner if we sold all the tickets
-        if (nextTicket == totalTickets) {
-            chooseWinner();
-        }
-
-        // Send back leftover money
-        if (moneySent > 0) {
-            payable(msg.sender).transfer(moneySent);
+            // If there are gaps in the raffle, fill them first
+            if (gaps.length > 0) {
+                uint gap = gaps[gaps.length - 1];
+                gaps.pop();
+                contestants[gap] = Contestant(msg.sender, raffleId);
+                emit TicketPurchase(raffleId, msg.sender, gap);
+            } else {
+                contestants[nextTicket] = Contestant(msg.sender, raffleId);
+                emit TicketPurchase(raffleId, msg.sender, nextTicket);
+                nextTicket++;
+            }
         }
     }
 
-    function chooseWinner() private {
-        
-        address seed1 = contestants[uint(uint160(address(block.coinbase))) % totalTickets].addr;
-        
-        address seed2 = contestants[uint(uint160(address(msg.sender))) % totalTickets].addr;
-        
-        uint seed3 = block.prevrandao;
-        bytes32 randHash = keccak256(abi.encodePacked(seed1, seed2, seed3));
+    // Choose the winner
+    function chooseWinner() public {
+        if (nextTicket >= totalTickets) {
+            uint winningNumber = getWinningNumber(blockNumber, contestants[0].addr, contestants[nextTicket - 1].addr, uint160(contestants[nextTicket / 2].addr));
+            address winningAddress = contestants[winningNumber].addr;
 
-        uint winningNumber = uint(randHash) % totalTickets;
-        address winningAddress = contestants[winningNumber].addr;
-        emit RaffleResult(raffleId, winningNumber, winningAddress, seed1, seed2, seed3, randHash);
+            emit RaffleResult(raffleId, winningNumber, winningAddress, contestants[0].addr, contestants[nextTicket - 1].addr, uint160(contestants[nextTicket / 2].addr), keccak256(abi.encodePacked(blockNumber, contestants[0].addr, contestants[nextTicket - 1].addr, contestants[nextTicket / 2].addr)));
 
-        // Start next raffle
-        raffleId++;
-        nextTicket = 0;
-        
-        blockNumber = block.number;
+            payable(winningAddress).transfer(prize);
+            payable(feeAddress).transfer(fee);
 
-        // 
-        // 
-        // 
-
-        // Distribute prize and fee
-        payable(winningAddress).transfer(prize);
-        payable(feeAddress).transfer(fee);
+            raffleId++;
+            nextTicket = 0;
+            
+            blockNumber = block.number;
+            delete gaps;
+        }
     }
 
-    // Get your money back before the raffle occurs
+    // Gets the winning number based on the block number and the seeds
+    function getWinningNumber(uint _blockNumber, address _seed1, address _seed2, uint _seed3) constant internal returns (uint) {
+        bytes32 randHash = keccak256(abi.encodePacked(_blockNumber, _seed1, _seed2, _seed3));
+        return uint(randHash) % totalTickets;
+    }
+
+    // A refund can be requested if the raffle has not been completed after 1 week occurs
     function getRefund() public {
         uint refund = 0;
         for (uint i = 0; i < totalTickets; i++) {
@@ -168,7 +174,7 @@ contract Ethraffle_v4b {
 
     function kill() public {
         if (msg.sender == feeAddress) {
-            payable(feeAddress).transfer(address(this).balance);
+            selfdestruct(payable(feeAddress));
         }
     }
 }
