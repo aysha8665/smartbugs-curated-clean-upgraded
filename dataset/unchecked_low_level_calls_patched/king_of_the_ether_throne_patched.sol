@@ -108,7 +108,7 @@ contract KingOfTheEtherThrone {
         // If they paid too little, reject claim and refund their money.
         if (valuePaid < currentClaimPrice) {
             
-            require(payable(msg.sender).send(valuePaid));
+            require(payable(msg.sender).send(valuePaid), "Refund failed");
             return;
         }
 
@@ -116,7 +116,7 @@ contract KingOfTheEtherThrone {
         if (valuePaid > currentClaimPrice) {
             uint excessPaid = valuePaid - currentClaimPrice;
             
-            require(payable(msg.sender).send(excessPaid));
+            require(payable(msg.sender).send(excessPaid), "Refund failed");
             valuePaid = valuePaid - excessPaid;
         }
 
@@ -130,7 +130,7 @@ contract KingOfTheEtherThrone {
 
         if (currentMonarch.etherAddress != wizardAddress) {
             
-            require(payable(currentMonarch.etherAddress).send(compensation));
+            require(payable(currentMonarch.etherAddress).send(compensation), "Compensation transfer failed");
         } else {
             // When the throne is vacant, the fee accumulates for the wizard.
         }
@@ -172,7 +172,7 @@ contract KingOfTheEtherThrone {
     // Used only by the wizard to collect his commission.
     function sweepCommission(uint amount) onlywizard public {
         
-        require(payable(wizardAddress).send(amount));
+        require(payable(wizardAddress).send(amount), "Commission transfer failed");
     }
 
     // Used only by the wizard to collect his commission.

@@ -1148,7 +1148,7 @@ contract PandaBreeding is PandaOwnership {
 
         // Send the balance fee to the person who made birth happen.
         
-        require(payable(msg.sender).send(autoBirthFee));
+        require(payable(msg.sender).send(autoBirthFee), "Failed to transfer auto birth fee to caller");
 
         delete childOwner[_matronId];
 
