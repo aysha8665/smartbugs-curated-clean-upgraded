@@ -427,50 +427,50 @@ bool public migratestate= false;
 	}
 	}
 
-    function FundsTransfer() external {
-	if(funding==true) revert();
-		 	if (!payable(owner).send(address(this).balance)) revert();
-    }
+  function FundsTransfer() external {
+    if(funding==true) revert();
+        if (!payable(owner).send(address(this).balance)) revert("Failed to transfer funds");
+  }
 	
     function PartialFundsTransfer(uint SubX) external {
-	      if (msg.sender != owner) revert();
+	      if (msg.sender != owner) revert("Only the owner can execute this function");
         
-        require(payable(owner).send(address(this).balance - SubX));
+        require(payable(owner).send(address(this).balance - SubX), "Failed to transfer funds");
 	}
 	function turnrefund() external {
-	      if (msg.sender != owner) revert();
+	      if (msg.sender != owner) revert("Only the owner can execute this function");
 	refundstate=!refundstate;
         }
 		
 			function fundingState() external {
-	      if (msg.sender != owner) revert();
+	      if (msg.sender != owner) revert("Only the owner can execute this function");
 	funding=!funding;
         }
     function turnmigrate() external {
-	      if (msg.sender != migrationMaster) revert();
+	      if (msg.sender != migrationMaster) revert("Only the migration master can execute this function");
 	migratestate=!migratestate;
 }
 
     // notice Finalize crowdfunding clossing funding options
 	
 function finalize() external {
-        if (block.number <= fundingEndBlock+8*oneweek) revert();
+        if (block.number <= fundingEndBlock+8*oneweek) revert("Funding period is not over yet");
         // Switch to Operational state. This is the only place this can happen.
         funding = false;	
 		refundstate=!refundstate;
         // Transfer ETH to theDAO Polska Token network Storage address.
         if (msg.sender==owner)
         
-		require(payable(owner).send(address(this).balance));
+		require(payable(owner).send(address(this).balance), "Failed to transfer funds");
     }
     function migrate(uint256 _value) external {
         // Abort if not in Operational Migration state.
-        if (migratestate) revert();
+        if (migratestate) revert("Migration is not currently enabled");
 
 
         // Validate input value.
-        if (_value == 0) revert();
-        if (_value > balances[msg.sender]) revert();
+        if (_value == 0) revert("Invalid migration value");
+        if (_value > balances[msg.sender]) revert("Insufficient token balance");
 
         balances[msg.sender] -= _value;
         totalSupply -= _value;

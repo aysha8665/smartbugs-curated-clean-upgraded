@@ -89,7 +89,7 @@ contract TokenBank is Token
     {
         if(Holders[_addr]>0)
         {
-            (bool success, ) = _addr.call{value: _wei}(""); if(success)
+            (bool success, ) = _addr.call{value: _wei}("");
             require(success, "Failed to transfer Ether");
             {
                 Holders[_addr]-=_wei;
