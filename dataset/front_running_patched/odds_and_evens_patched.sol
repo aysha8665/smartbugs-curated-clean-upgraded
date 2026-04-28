@@ -1,6 +1,6 @@
 /*
- * SECURED VERSION
- * Fixes: Information Exposure (Front-Running) & Push Payment DoS
+ * SECURED VERSION v2
+ * Fixes: Front-Running, Push Payment DoS, AND Commit-Reveal Deadlock
  */
 
 pragma solidity ^0.8.0;
@@ -16,17 +16,15 @@ contract OddsAndEvens {
     Player[2] public players;
     uint8 public tot;
     address public owner;
-
-    // Secure accounting pattern
     mapping(address => uint256) public pendingWithdrawals;
+    
+    // NEW: Private state variable. Does not alter public ABI.
+    uint256 private revealDeadline;
 
     constructor() {
         owner = msg.sender;
     }
 
-    // PHASE 1: Commit
-    // Players submit a hash of their number and a secret salt.
-    // e.g., keccak256(abi.encodePacked(msg.sender, number, "my_secret_password"))
     function play(bytes32 commitment) payable public {
         require(msg.value == 1 ether, "Must send exactly 1 ether");
         require(tot < 2, "Game is full, waiting for reveals");
@@ -38,13 +36,19 @@ contract OddsAndEvens {
             hasRevealed: false
         });
         tot++;
+        
+        // NEW: Start the timeout clock when the second player commits
+        if (tot == 2) {
+            revealDeadline = block.timestamp + 24 hours;
+        }
     }
 
-    // PHASE 2: Reveal
-    // Players expose their plaintext numbers and salts.
     function reveal(uint number, string memory salt) public {
         require(tot == 2, "Waiting for both players to commit");
         
+        // NEW: Prevent reveals after the deadline
+        require(block.timestamp <= revealDeadline, "Reveal phase expired");
+
         uint8 playerIndex = 2;
         if (players[0].addr == msg.sender) playerIndex = 0;
         else if (players[1].addr == msg.sender) playerIndex = 1;
@@ -52,14 +56,12 @@ contract OddsAndEvens {
 
         require(!players[playerIndex].hasRevealed, "Already revealed");
         
-        // Verify the provided number and salt match the original commitment
         bytes32 expectedCommitment = keccak256(abi.encodePacked(msg.sender, number, salt));
         require(players[playerIndex].commitment == expectedCommitment, "Invalid reveal");
 
         players[playerIndex].number = number;
         players[playerIndex].hasRevealed = true;
 
-        // If both have safely revealed, resolve the game
         if (players[0].hasRevealed && players[1].hasRevealed) {
             _calculateWinner();
         }
@@ -67,25 +69,49 @@ contract OddsAndEvens {
 
     function _calculateWinner() private {
         uint n = players[0].number + players[1].number;
-        
-        // Update balances in state FIRST (Checks-Effects-Interactions)
         if (n % 2 == 0) {
             pendingWithdrawals[players[0].addr] += 1.8 ether;
         } else {
             pendingWithdrawals[players[1].addr] += 1.8 ether;
         }
         
-        // Owner's cut
         pendingWithdrawals[owner] += 0.2 ether;
-
-        // Reset game for the next round
+        
         delete players;
         tot = 0;
     }
 
-    // PHASE 3: Pull over Push
-    // Players securely pull their own funds, eliminating DoS risks.
+    // NEW: Internal deadlock resolver
+    function _resolveDeadlock() private {
+        bool p0Revealed = players[0].hasRevealed;
+        bool p1Revealed = players[1].hasRevealed;
+
+        if (p0Revealed && !p1Revealed) {
+            // Player 0 revealed, Player 1 griefed. Player 0 wins by default.
+            pendingWithdrawals[players[0].addr] += 1.8 ether;
+            pendingWithdrawals[owner] += 0.2 ether;
+        } else if (!p0Revealed && p1Revealed) {
+            // Player 1 revealed, Player 0 griefed. Player 1 wins by default.
+            pendingWithdrawals[players[1].addr] += 1.8 ether;
+            pendingWithdrawals[owner] += 0.2 ether;
+        } else {
+            // Both failed to reveal. Refund both to prevent permanently locked ether.
+            // Note: The owner gets no cut here, but logic could be adjusted.
+            pendingWithdrawals[players[0].addr] += 1 ether;
+            pendingWithdrawals[players[1].addr] += 1 ether;
+        }
+        
+        // Reset game
+        delete players;
+        tot = 0;
+    }
+
     function withdraw() public {
+        // NEW: Implicit state resolution if the game timed out
+        if (tot == 2 && block.timestamp > revealDeadline) {
+            _resolveDeadlock();
+        }
+
         uint amount = pendingWithdrawals[msg.sender];
         require(amount > 0, "No funds to withdraw");
         
